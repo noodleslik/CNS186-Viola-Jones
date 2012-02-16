@@ -6,7 +6,7 @@
 using namespace std;
 using namespace cv;
 
-Mat integral_image(Mat img) {
+Mat IntegralImage(Mat img) {
     // Image should have 8-bits because I am lazy.
     if(img.type() != CV_8UC1) { 
         return Mat::zeros(0, 0, CV_64F); 
