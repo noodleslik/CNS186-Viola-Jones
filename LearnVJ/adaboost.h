@@ -23,13 +23,15 @@ bool operator< (const AdaboostFeature& left, const AdaBoostFeature& right) {
 
 // Runs the overall adaboost algorithm, which_faces is the last face in the training set, which_not_faces is the last face in the 
 // negative training set, how_many is the number of features to return.
-set<AdaBoostFeature> RunAdaboost(int which_faces, int which_not_faces, int how_many);
+set<AdaBoostFeature*> RunAdaboost(int which_faces, int which_not_faces, int how_many);
 
 // Runs one round of the adaboost algorithm (calculates errors, finds best features, returns thresh, feat, pol). 
 // Also updates weightings.
-AdaBoostFeature RunAdaboostRound(Mat integral_image, set<Feature*> feature_set);
+AdaBoostFeature* RunAdaboostRound(Mat integral_image, set<Feature*> feature_set);
 
 //Given a set of positive and negative values, finds best threshold and polarity also returns error.
 Pair< Pair<int, int>, double> FindThresholdAndPolarity(vector<int> positive_examples, vector<int> negative_examples, int feature_value);
+
+void SaveAdaboost(set<AdaBoostFeature*> to_save); 
 
 #endif
