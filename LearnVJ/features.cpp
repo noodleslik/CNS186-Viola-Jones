@@ -1,5 +1,8 @@
 #include "features.h"
 
+#include <cstdlib>
+#include <ctime>
+
 using namespace std;
 using namespace cv;
 
@@ -28,8 +31,63 @@ bool IsValidFeature(Feature* to_check) {
     return true;
 }
 
-set<Feature*> GenerateRandomFeatures(int window_size, int num_features, int snap_to = 1) {
+set<Feature*>* GenerateRandomFeatures(int window_size, int num_features) {
+    set<Feature*>* storage = new set<Feature*>();
+    srand(time(NULL));
+    for(int i=0; i<num_features; ++i) {
+        int lowest = 0; int highest = 4; int range = (highest - lowest) + 1;
+        int type = lowest + int(range * rand()/(RAND_MAX + 1));
+        if(type == 0 || type == 1) {
+            lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
+            int x1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 0; highest = SUBWINDOW_SIZE - 1 - 1; range = (highest - lowest) + 1;
+            int y1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 2; range = (highest - lowest) + 1; 
+            int x_diff = lowest + int(range * rand()/(RAND_MAX + 1));
+            int x2 = x1 + x_diff;
+            lowest = y1 + 1; highest = SUBWINDOW_SIZE - 1; range = (highest - lowest) + 1;
+            int y2 = lowest + int(range * rand()/(RAND_MAX + 1)); 
+        } // For type = 1 we will simply reverse x and y
+        else if(type == 2 || type == 3) { 
+            lowest = 0; highest = SUBWINDOW_SIZE - 1 - 3; range = (highest - lowest) + 1;
+            int x1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 0; highest = SUBWINDOW_SIZE - 1 - 1; range = (highest - lowest) + 1;
+            int y1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 3; range = (highest - lowest) + 1; 
+            int x_diff = lowest + int(range * rand()/(RAND_MAX + 1));
+            int x2 = x1 + x_diff;
+            lowest = y1 + 1; highest = SUBWINDOW_SIZE - 1; range = (highest - lowest) + 1;
+            int y2 = lowest + int(range * rand()/(RAND_MAX + 1)); 
+        } // For type = 3 we will simply reverse x and y
+        else if(type == 4) { 
+            lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
+            int x1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
+            int y1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 2; range = (highest - lowest) + 1; 
+            int x_diff = lowest + int(range * rand()/(RAND_MAX + 1));
+            lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - y1) / 2; range = (highest - lowest) + 1;
+            int y_diff = lowest + int(range * rand()/(RAND_MAX + 1));
+            int x2 = x1 + x_diff;
+            int y2 = y1 + y_diff;
+        }
+        if(type == 1 || type == 3) { int temp = x1; x1 = y1; y1 = temp; temp = x2; x2 = y2; y2 = x2; }
+        Feature* new_creation = new Feature();
+        new_creation->x1 = x1;
+        new_creation->x2 = x2;
+        new_creation->y1 = y1;
+        new_creation->y2 = y2;
+        if(type == 0) { new_creation->type = Feature::TWO_REC_HORIZ; }
+        else if(type == 1) { new_creation->type = Feature::TWO_REC_VERT; }
+        else if(type == 2) { new_creation->type = Feature::THREE_REC_HORIZ; }
+        else if(type == 3) { new_creation->type = Feature::THREE_REC_VERT; }
+        else { new_creation->type = Feature::FOUR_REC; }
 
+        if(!IsValidFeature(new_creation)) { return NULL; }
+
+        storage.add(new_creation);
+    }
+    return storage;
 }
 
 double CalculateFeature(Feature* feature, Mat integral_image) {
