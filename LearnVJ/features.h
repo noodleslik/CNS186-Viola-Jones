@@ -14,6 +14,8 @@ using namespace cv;
 
 */
 
+const int SUBWINDOW_SIZE = 25;
+
 struct Feature {
     enum FeatureTypeT { TWO_REC_HORIZ, TWO_REC_VERT, THREE_REC_HORIZ, THREE_REC_VERT, FOUR_REC };
     FeatureTypeT type;
@@ -21,18 +23,16 @@ struct Feature {
     // (UL, LR points of rectangle 1):
     int x1, y1;
     int x2, y2;
-    // Remaining determining coordinate for rectangle 2 (x for horiz 2,3 or 4, y for vert 2,3)
-    int c1;
-    // Required only for 3 and 4:
-    // Remaining determining coordinate for rectangle 3 (x for horiz 3, y for vert 3 or 4)
-    int c2;
+    // All remaining coordinates are determined since all rectangles are same size and shape 
+
+    // Optional value
+    double weighting;
 };
 
 // Valid features require that:
 //   - x1 < x2 
 //   - y1 < y2
-//   - x2 < c1 for horiz 2,3 or 4  y2 < c1 for vert 2,3
-//   - x2 < c2 for horiz 3         y2 < c2 for vert 3 or 4
+//   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);
 
 // Generate a set of n features. If a non-default value of snap_to is provided, features will only use multiples
