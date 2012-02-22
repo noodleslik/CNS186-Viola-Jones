@@ -7,3 +7,5 @@ integral_image.o: integral_image.cpp
 integral_image_test.o: integral_image_test.cpp
 	g++ -O2 `pkg-config --cflags --libs opencv` -c integral_image_test.cpp
 
+clean: 
+	rm *.o integral_image_test
