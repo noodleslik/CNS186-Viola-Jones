@@ -24,9 +24,6 @@ struct Feature {
     int x1, y1;
     int x2, y2;
     // All remaining coordinates are determined since all rectangles are same size and shape 
-
-    // Optional value
-    double weighting;
 };
 
 bool operator< (const Feature& left, const Feature& right) {
