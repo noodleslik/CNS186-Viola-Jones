@@ -31,7 +31,7 @@ bool IsValidFeature(Feature* to_check) {
     return true;
 }
 
-set<Feature*>* GenerateRandomFeatures(int window_size, int num_features) {
+set<Feature*>* GenerateRandomFeatures(int num_features) {
     set<Feature*>* storage = new set<Feature*>();
     srand(time(NULL));
     for(int i=0; i<num_features; ++i) {

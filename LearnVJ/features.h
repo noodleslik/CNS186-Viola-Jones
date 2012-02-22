@@ -51,10 +51,11 @@ bool operator< (const Feature& left, const Feature& right) {
 //   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);
 
+// The text here is out of date.
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.
-set<Feature*> GenerateRandomFeatures(int window_size, int num_features);
+set<Feature*> GenerateRandomFeatures(int num_features);
 
 // Calculates a feature given the IntegralImage
 int CalculateFeature(Feature* feature, Mat integral_image);
