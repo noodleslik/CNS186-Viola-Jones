@@ -6,6 +6,7 @@
 #include "highgui.h"
 #include <cstdio>
 #include <fstream>
+#include <iostream>
 #include <limits>
 
 using namespace std;
