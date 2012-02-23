@@ -1,6 +1,6 @@
 #include "adaboost.h"
 #include "features.h"
-#include "../integral_image.h"
+#include "../IntegralImage/integral_image.h"
 
 #include "cv.h"
 #include <cstdlib>
