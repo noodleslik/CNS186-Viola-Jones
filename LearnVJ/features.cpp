@@ -37,39 +37,40 @@ set<Feature*>* GenerateRandomFeatures(int num_features) {
     for(int i=0; i<num_features; ++i) {
         int lowest = 0; int highest = 4; int range = (highest - lowest) + 1;
         int type = lowest + int(range * rand()/(RAND_MAX + 1));
+        int x1,y1,x2,y2;
         if(type == 0 || type == 1) {
             lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
-            int x1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            x1 = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 0; highest = SUBWINDOW_SIZE - 1 - 1; range = (highest - lowest) + 1;
-            int y1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            y1 = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 2; range = (highest - lowest) + 1; 
             int x_diff = lowest + int(range * rand()/(RAND_MAX + 1));
-            int x2 = x1 + x_diff;
+            x2 = x1 + x_diff;
             lowest = y1 + 1; highest = SUBWINDOW_SIZE - 1; range = (highest - lowest) + 1;
-            int y2 = lowest + int(range * rand()/(RAND_MAX + 1)); 
+            y2 = lowest + int(range * rand()/(RAND_MAX + 1)); 
         } // For type = 1 we will simply reverse x and y
         else if(type == 2 || type == 3) { 
             lowest = 0; highest = SUBWINDOW_SIZE - 1 - 3; range = (highest - lowest) + 1;
-            int x1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            x1 = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 0; highest = SUBWINDOW_SIZE - 1 - 1; range = (highest - lowest) + 1;
-            int y1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            y1 = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 3; range = (highest - lowest) + 1; 
             int x_diff = lowest + int(range * rand()/(RAND_MAX + 1));
-            int x2 = x1 + x_diff;
+            x2 = x1 + x_diff;
             lowest = y1 + 1; highest = SUBWINDOW_SIZE - 1; range = (highest - lowest) + 1;
-            int y2 = lowest + int(range * rand()/(RAND_MAX + 1)); 
+            y2 = lowest + int(range * rand()/(RAND_MAX + 1)); 
         } // For type = 3 we will simply reverse x and y
         else if(type == 4) { 
             lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
-            int x1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            x1 = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
-            int y1 = lowest + int(range * rand()/(RAND_MAX + 1));
+            y1 = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 2; range = (highest - lowest) + 1; 
             int x_diff = lowest + int(range * rand()/(RAND_MAX + 1));
             lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - y1) / 2; range = (highest - lowest) + 1;
             int y_diff = lowest + int(range * rand()/(RAND_MAX + 1));
-            int x2 = x1 + x_diff;
-            int y2 = y1 + y_diff;
+            x2 = x1 + x_diff;
+            y2 = y1 + y_diff;
         }
         if(type == 1 || type == 3) { int temp = x1; x1 = y1; y1 = temp; temp = x2; x2 = y2; y2 = x2; }
         Feature* new_creation = new Feature();
@@ -85,12 +86,12 @@ set<Feature*>* GenerateRandomFeatures(int num_features) {
 
         if(!IsValidFeature(new_creation)) { return NULL; }
 
-        storage.add(new_creation);
+        storage->insert(new_creation);
     }
     return storage;
 }
 
-double CalculateFeature(Feature* feature, Mat integral_image) {
+int CalculateFeature(Feature* feature, Mat integral_image) {
     double current_sum = 0;
     if(!IsValidFeature(feature)) { return -1; }
     // First rectangle is the same for all.
@@ -108,7 +109,7 @@ double CalculateFeature(Feature* feature, Mat integral_image) {
                        integral_image.at<double>(feature->y2, feature->x2);
     }
     // Second rectangle for vertical 2 and 3, third rectangle for 4
-    if(feature->type == Feature::TWO_REC_VERT || feature->type == Feature->THREE_REC_VERT ||
+    if(feature->type == Feature::TWO_REC_VERT || feature->type == Feature::THREE_REC_VERT ||
             feature->type == Feature::FOUR_REC) {
         int second_y = feature->y2 + (feature->y2 - feature->y1);
         current_sum -= integral_image.at<double>(feature->y2, feature->x1) +
@@ -146,5 +147,5 @@ double CalculateFeature(Feature* feature, Mat integral_image) {
                        integral_image.at<double>(y2, x1);
     }
 
-    return current_sum;
+    return (int)current_sum;
 }
