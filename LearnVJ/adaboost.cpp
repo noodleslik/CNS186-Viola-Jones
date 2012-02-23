@@ -3,16 +3,16 @@
 #include "../IntegralImage/integral_image.h"
 
 #include "cv.h"
-#include <cstdlib>
-#include <cstring>
+#include "highgui.h"
+#include <cstdio>
 #include <fstream>
 #include <limits>
 
 using namespace std;
 using namespace cv;
 
-const char const* base_positive = "../Faces_Normalized/";
-const char const* base_negative = "../Negative_Dataset/";
+const char* const base_positive = "../Faces_Normalized/";
+const char* const base_negative = "../Negative_Dataset/";
 
 vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int how_many, int total_set) {
     vector<AdaBoostFeature*> container;
@@ -25,7 +25,7 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
     Mat gray_img_placeholder;
     for(int i=0; i < which_faces; ++i) {
         char buffer[7];
-        itoa(i, buffer, 10);
+        sprintf(buffer, "%d", i);
         char buffer2[100];
         strcat(buffer2, base_positive); strcat(buffer2, buffer);
         img_placeholder = imread(buffer2, 1);
@@ -37,7 +37,7 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
     }
     for(int i=0; i < which_not_faces; ++i) {
         char buffer[7];
-        itoa(i, buffer, 10);
+        sprintf(buffer, "%d", i);
         char buffer2[100];
         strcat(buffer2, base_negative); strcat(buffer2, buffer);
         img_placeholder = imread(buffer2, 1);
@@ -86,7 +86,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     vector<Mat>::const_iterator im_it;
     vector<int> positive_results;
     vector<int> negative_results;
-    for(feature_it = feature_set->begin(); feature_it != feature_set.end(); ++feature_it) {
+    for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it) {
         positive_results.clear();
         negative_results.clear();
         for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it) {
@@ -111,10 +111,10 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     positive_results.clear();
     negative_results.clear();
     for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it) {
-        positive_results.push_back(CalculateFeature(*best_feature, *im_it));
+        positive_results.push_back(CalculateFeature(best_feature, *im_it));
     }
     for(im_it = neg_iis.begin(); im_it != neg_iis.end(); ++im_it) {
-        negative_results.push_back(CalculateFeature(*best_feature, *im_it));
+        negative_results.push_back(CalculateFeature(best_feature, *im_it));
     }
     double beta = (best_error)/(1 - best_error);
     int cur_im = 0;
@@ -135,10 +135,10 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     }
    
     AdaBoostFeature* result = new AdaBoostFeature();
-    result.feature = best_feature;
-    result.threshold = best_threshold;
-    result.polarity = best_polarity;
-    result.beta_t = beta;
+    result->feature = best_feature;
+    result->threshold = best_threshold;
+    result->polarity = best_polarity;
+    result->beta_t = beta;
 }
 
 // Yes this is inefficient. I am lazy. QED.
@@ -229,7 +229,7 @@ void SaveAdaBoost(vector<AdaBoostFeature*> to_save, char* filename) {
     save_file.open(filename);
     vector<AdaBoostFeature*>::const_iterator it;
     for(it = to_save.begin(); it != to_save.end(); ++it) {
-        save_file << it->feature->type << " " << it->feature->x1 << " " << it->feature->y1 << " " << it->feature->x2 
-            << " " << it->feature->y2 << " " << it->threshold << " " << it->polarity << " " << it->beta_t << "\n";
+        save_file << (*it)->feature->type << " " << (*it)->feature->x1 << " " << (*it)->feature->y1 << " " << (*it)->feature->x2 
+            << " " << (*it)->feature->y2 << " " << (*it)->threshold << " " << (*it)->polarity << " " << (*it)->beta_t << "\n";
     }
 }

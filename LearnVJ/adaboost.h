@@ -3,7 +3,6 @@
 
 #include "cv.h"
 
-#include <pair>
 #include <set>
 #include <vector>
 
@@ -20,9 +19,9 @@ struct AdaBoostFeature {
 };
 
 bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right) {
-    if(left->feature < right->feature) { return true; } if(right->feature < left->feature) { return false; }
-    if(left->threshold < right->threshold) { return true; } if(right->threshold < left->threshold) { return false; }
-    if(left->polarity < right->polarity) { return true; } if(right->polarity < left->polarity) { return false; }
+    if(left.feature < right.feature) { return true; } if(right.feature < left.feature) { return false; }
+    if(left.threshold < right.threshold) { return true; } if(right.threshold < left.threshold) { return false; }
+    if(left.polarity < right.polarity) { return true; } if(right.polarity < left.polarity) { return false; }
     return false;
 }
 

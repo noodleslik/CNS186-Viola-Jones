@@ -2,7 +2,6 @@
 #define LEARNVJ_FEATURES_H_
 
 #include "cv.h"
-#include "features_lessthan.h"
 
 #include <set>
 
@@ -55,7 +54,7 @@ bool IsValidFeature(Feature* to_check);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.
-set<Feature*> GenerateRandomFeatures(int num_features);
+set<Feature*>* GenerateRandomFeatures(int num_features);
 
 // Calculates a feature given the IntegralImage
 int CalculateFeature(Feature* feature, Mat integral_image);
