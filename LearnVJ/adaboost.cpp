@@ -5,6 +5,7 @@
 #include "cv.h"
 #include "highgui.h"
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -34,7 +35,7 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
         char buffer[7];
         sprintf(buffer, "%d", i);
         char buffer2[100];
-        strcat(buffer2, base_positive); strcat(buffer2, buffer);
+        strcpy(buffer2, base_positive); strcat(buffer2, buffer);
         img_placeholder = imread(buffer2, 1);
         pos_iis.push_back(IntegralImage(img_placeholder)); 
     }
@@ -45,7 +46,7 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
         char buffer[7];
         sprintf(buffer, "%d", i);
         char buffer2[100];
-        strcat(buffer2, base_negative); strcat(buffer2, buffer);
+        strcpy(buffer2, base_negative); strcat(buffer2, buffer);
         img_placeholder = imread(buffer2, 1);
         neg_iis.push_back(IntegralImage(img_placeholder)); 
     }

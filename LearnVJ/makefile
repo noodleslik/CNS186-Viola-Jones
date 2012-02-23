@@ -1,4 +1,5 @@
-CFLAGS= -O2 `pkg-config --cflags --libs opencv`
+#CFLAGS= -O2 `pkg-config --cflags --libs opencv`
+CFLAGS= -O0 `pkg-config --cflags --libs opencv`
 
 all: adaboost_main
 
