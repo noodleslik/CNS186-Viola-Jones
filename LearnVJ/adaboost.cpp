@@ -4,6 +4,7 @@
 
 #include "cv.h"
 #include "highgui.h"
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -116,10 +117,10 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     vector<int> negative_results;
     int which_feature = 0;
     for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it) {
-        which_feature++;
-        if(which_feature % 1000 == 0) {
+        if(which_feature % 100 == 0) {
             cout << "Calculating feature " << which_feature << endl;
         }
+        which_feature++;
         positive_results.clear();
         negative_results.clear();
         for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it) {
