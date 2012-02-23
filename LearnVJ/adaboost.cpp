@@ -12,6 +12,13 @@
 using namespace std;
 using namespace cv;
 
+bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right) {
+    if(left.feature < right.feature) { return true; } if(right.feature < left.feature) { return false; }
+    if(left.threshold < right.threshold) { return true; } if(right.threshold < left.threshold) { return false; }
+    if(left.polarity < right.polarity) { return true; } if(right.polarity < left.polarity) { return false; }
+    return false;
+}
+
 const char* const base_positive = "../Faces_Normalized/";
 const char* const base_negative = "../Negative_Dataset/";
 
@@ -225,7 +232,7 @@ void FindThresholdAndPolarity(const vector<int> positive_examples, const vector<
     *error = best_error;
 }
 
-void SaveAdaBoost(vector<AdaBoostFeature*> to_save, char* filename) {
+void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename) {
     ofstream save_file;
     save_file.open(filename);
     vector<AdaBoostFeature*>::const_iterator it;

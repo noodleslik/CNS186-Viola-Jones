@@ -18,12 +18,7 @@ struct AdaBoostFeature {
     double beta_t; 
 };
 
-bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right) {
-    if(left.feature < right.feature) { return true; } if(right.feature < left.feature) { return false; }
-    if(left.threshold < right.threshold) { return true; } if(right.threshold < left.threshold) { return false; }
-    if(left.polarity < right.polarity) { return true; } if(right.polarity < left.polarity) { return false; }
-    return false;
-}
+bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right); 
 
 // Runs the overall adaboost algorithm, which_faces is the last face in the training set, which_not_faces is the last face in the 
 // negative training set, how_many is the number of features to return, total_set is how many to randomly generate.
@@ -39,6 +34,6 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
 void FindThresholdAndPolarity(const vector<int> positive_examples, const vector<int> negative_examples, vector<double>* pos_weights, 
                                                        vector<double>* neg_weights, int* threshold, int* polarity, double* error);
 
-void SaveAdaBoost(vector<AdaBoostFeature*> to_save, char* filename); 
+void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename); 
 
 #endif
