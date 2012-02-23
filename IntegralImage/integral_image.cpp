@@ -26,5 +26,9 @@ Mat IntegralImage(Mat img) {
         ii.col(i) = ii.col(i) + ii.col(i-1);
     }
 
+    if(ii.data == NULL) { 
+        cout << "WARNING: Integral image is null." << endl;
+    }
+
     return ii;
 }

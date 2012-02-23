@@ -22,6 +22,8 @@ bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right) {
 
 const char* const base_positive = "../Faces_Normalized/";
 const char* const base_negative = "../Negative_Dataset/";
+const char* const extension = ".jpg";
+const char* const extension2 = ".png";
 
 vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int how_many, int total_set) {
     vector<AdaBoostFeature*> container;
@@ -31,12 +33,19 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
     vector<Mat> neg_iis;
     vector<double> neg_weights;
     Mat img_placeholder;
+    int num_skipped = 0;
     for(int i=0; i < which_faces; ++i) {
         char buffer[7];
-        sprintf(buffer, "%d", i);
+        sprintf(buffer, "%d", i+1);
         char buffer2[100];
-        strcpy(buffer2, base_positive); strcat(buffer2, buffer);
-        img_placeholder = imread(buffer2, 1);
+        strcpy(buffer2, base_positive); strcat(buffer2, buffer); strcat(buffer2, extension);
+        img_placeholder = imread(buffer2, 0);
+        if(img_placeholder.data == NULL) {
+            cout << "Image number " << i+1 << " does not exist in positive examples. Skipping." << endl;
+            num_skipped++;
+            continue;
+        }
+        Mat hurr = IntegralImage(img_placeholder);
         pos_iis.push_back(IntegralImage(img_placeholder)); 
     }
     for(int i=0; i < pos_iis.size(); ++i) {
@@ -44,23 +53,33 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
     }
     for(int i=0; i < which_not_faces; ++i) {
         char buffer[7];
-        sprintf(buffer, "%d", i);
+        sprintf(buffer, "%d", i+1);
         char buffer2[100];
-        strcpy(buffer2, base_negative); strcat(buffer2, buffer);
-        img_placeholder = imread(buffer2, 1);
+        strcpy(buffer2, base_negative); strcat(buffer2, buffer); strcat(buffer2, extension2);
+        img_placeholder = imread(buffer2, 0);
+        if(img_placeholder.data == NULL) {
+            cout << "Image number " << i+1 << " does not exist in negative examples. Skipping." << endl;
+            num_skipped++;
+            continue;
+        }
         neg_iis.push_back(IntegralImage(img_placeholder)); 
     }
     for(int i=0; i < neg_iis.size(); ++i) {
         neg_weights.push_back((double)(1)/(double)(2 * neg_iis.size()));
     }
 
+    cout << "All images loaded. " << num_skipped << " images skipped." << endl;
+
     // Generate random features.
     set<Feature*>* random_features = GenerateRandomFeatures(total_set);
+    cout << random_features->size() << " unique features generated." << endl; 
 
     // Run AdaBoost rounds.
     for(int i=0; i < how_many; ++i) {
         cout << "Running round " << i << " of Adaboost procedure." << endl;
-        container.push_back(RunAdaBoostRound(pos_iis, neg_iis, &pos_weights, &neg_weights, random_features));
+        AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, &pos_weights, &neg_weights, random_features);
+        container.push_back(best_feature);
+        random_features->erase(best_feature->feature);
     }
      
     return container;
@@ -69,6 +88,7 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> neg_iis, vector<double>* pos_weights, 
                                   vector<double>* neg_weights, set<Feature*>* feature_set) {
     // Step 1. Normalize the weights
+    cout << "Normalizing Weights" << endl;
     double weight_sums = 0;
     vector<double>::iterator it;
     for(it = pos_weights->begin(); it != pos_weights->end(); ++it) {
@@ -85,6 +105,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     }
 
     // Step 2. Find the feature with the best error
+    cout << "Finding best feature." << endl;
     int best_threshold, best_polarity, cur_threshold, cur_polarity;
     double best_error, cur_error;
     Feature* best_feature;
@@ -93,7 +114,12 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     vector<Mat>::const_iterator im_it;
     vector<int> positive_results;
     vector<int> negative_results;
+    int which_feature = 0;
     for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it) {
+        which_feature++;
+        if(which_feature % 1000 == 0) {
+            cout << "Calculating feature " << which_feature << endl;
+        }
         positive_results.clear();
         negative_results.clear();
         for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it) {
@@ -105,7 +131,6 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
 
         FindThresholdAndPolarity(positive_results, negative_results, pos_weights, neg_weights, &cur_threshold,
                                  &cur_polarity, &cur_error);
-
         if(cur_error < best_error) {
             best_error = cur_error;
             best_threshold = cur_threshold;
@@ -115,6 +140,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     }
 
     // Step 3. Update the weights and return the correct feature.
+    cout << "Updating weights." << endl;
     positive_results.clear();
     negative_results.clear();
     for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it) {
@@ -146,6 +172,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
     result->threshold = best_threshold;
     result->polarity = best_polarity;
     result->beta_t = beta;
+    return result;
 }
 
 // Yes this is inefficient. I am lazy. QED.
@@ -158,6 +185,7 @@ void FindThresholdAndPolarity(const vector<int> positive_examples, const vector<
     int best_polarity;
     double pos_pol_sum, neg_pol_sum;
     double best_error;
+    best_error = numeric_limits<double>::infinity(); 
     for(it = positive_examples.begin(); it != positive_examples.end(); ++it) {
         pos_pol_sum = 0; neg_pol_sum = 0;
         cur_threshold = *it;
