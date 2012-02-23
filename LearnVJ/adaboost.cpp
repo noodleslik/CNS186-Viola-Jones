@@ -30,15 +30,13 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
     vector<Mat> neg_iis;
     vector<double> neg_weights;
     Mat img_placeholder;
-    Mat gray_img_placeholder;
     for(int i=0; i < which_faces; ++i) {
         char buffer[7];
         sprintf(buffer, "%d", i);
         char buffer2[100];
         strcat(buffer2, base_positive); strcat(buffer2, buffer);
         img_placeholder = imread(buffer2, 1);
-        cvtColor(img_placeholder, gray_img_placeholder, CV_RGB2GRAY);
-        pos_iis.push_back(IntegralImage(gray_img_placeholder)); 
+        pos_iis.push_back(IntegralImage(img_placeholder)); 
     }
     for(int i=0; i < pos_iis.size(); ++i) {
         pos_weights.push_back((double)(1)/(double)(2 * pos_iis.size()));       
@@ -49,8 +47,7 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
         char buffer2[100];
         strcat(buffer2, base_negative); strcat(buffer2, buffer);
         img_placeholder = imread(buffer2, 1);
-        cvtColor(img_placeholder, gray_img_placeholder, CV_RGB2GRAY);
-        neg_iis.push_back(IntegralImage(gray_img_placeholder)); 
+        neg_iis.push_back(IntegralImage(img_placeholder)); 
     }
     for(int i=0; i < neg_iis.size(); ++i) {
         neg_weights.push_back((double)(1)/(double)(2 * neg_iis.size()));
@@ -61,7 +58,8 @@ vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int h
 
     // Run AdaBoost rounds.
     for(int i=0; i < how_many; ++i) {
-       container.push_back(RunAdaBoostRound(pos_iis, neg_iis, &pos_weights, &neg_weights, random_features));
+        cout << "Running round " << i << " of Adaboost procedure." << endl;
+        container.push_back(RunAdaBoostRound(pos_iis, neg_iis, &pos_weights, &neg_weights, random_features));
     }
      
     return container;
