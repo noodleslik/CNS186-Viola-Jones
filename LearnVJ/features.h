@@ -2,26 +2,26 @@
 #define LEARNVJ_FEATURES_H_
 
 #include "cv.h"
-
 #include <set>
 
 using namespace std;
 using namespace cv;
 
-/* Generic file that contains definition of a feature as well as various utility functions for them (such as
-   checking validity or generating random sets of them).
-
-*/
+/*
+ * Definition of a feature as well as various utility functions for them
+ * (such as checking validity or generating random sets of them).
+ */
 
 const int SUBWINDOW_SIZE = 25;
 
-struct Feature {
+struct Feature
+{
     enum FeatureTypeT { TWO_REC_HORIZ, TWO_REC_VERT, THREE_REC_HORIZ, THREE_REC_VERT, FOUR_REC };
     FeatureTypeT type;
     // Required for all feature types 
     // (UL, LR points of rectangle 1):
-    int x1, y1;
-    int x2, y2;
+    int x1, y1; // Up Left
+    int x2, y2; // Low Right
     // All remaining coordinates are determined since all rectangles are same size and shape 
 };
 
