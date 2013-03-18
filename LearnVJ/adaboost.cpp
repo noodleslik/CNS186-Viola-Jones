@@ -211,8 +211,8 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> pos_iis, const vector<Mat> n
 // Yes this is inefficient. I am lazy. QED.
 // Try every example value as the threshold. This is WLOG.
 void FindThresholdAndPolarity(const vector<int> positive_examples, const vector<int> negative_examples, 
-							  vector<double>* pos_weights, vector<double>* neg_weights,
-							  int* threshold, int* polarity, double* error)
+                              vector<double>* pos_weights, vector<double>* neg_weights,
+                              int* threshold, int* polarity, double* error)
 {
 	vector<int>::const_iterator it;
 	int cur_threshold, best_threshold;
