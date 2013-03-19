@@ -3,7 +3,9 @@
 using namespace cv;
 
 #define SIZE 25
-
+/*
+ * extract face from each image sample
+ */
 int main(int argc, const char* argv[])
 {
 	FILE* fin;
