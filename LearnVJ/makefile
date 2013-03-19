@@ -1,10 +1,10 @@
-CFLAGS= -O2 `pkg-config --cflags --libs opencv`
-#CFLAGS= -O0 `pkg-config --cflags --libs opencv` -g
+CFLAGS=-O2 `pkg-config --cflags opencv`
+LIBS=`pkg-config --libs opencv`
 
 all: adaboost_main
 
 adaboost_main: adaboost_main.o adaboost.o features.o ../IntegralImage/integral_image.o
-	g++ $+ $(CFLAGS) -o adaboost_main
+	g++ $+ $(CFLAGS) $(LIBS) -o adaboost_main
 
 adaboost_main.o: adaboost_main.cpp
 	g++ $(CFLAGS) -c adaboost_main.cpp
@@ -16,8 +16,7 @@ features.o: features.cpp
 	g++ $(CFLAGS) -c features.cpp
 
 ../IntegralImage/integral_image.o::
-	@$(MAKE) -C $(@D) $(@F) -q || \
-    $(MAKE) -C $(@D) $(@F) 
+	@$(MAKE) -C $(@D) $(@F) -q || $(MAKE) -C $(@D) $(@F) 
 
 clean:
 	rm -rf *.o adaboost_main
