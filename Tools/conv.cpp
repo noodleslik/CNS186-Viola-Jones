@@ -2,6 +2,8 @@
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
+#define SIZE 25
+
 int main(int argc, const char* argv[])
 {
 	FILE* fin;
@@ -9,7 +11,8 @@ int main(int argc, const char* argv[])
 	Scalar scalar(255, 255, 0, 0);
 	if(argc<3)
 	{
-		printf("Usage: ./draw filename image_dir\n");
+		// ./conv ../WebFaces_BBS.txt ../WebFaces/
+		printf("Usage: ./conv filename image_dir\n");
 		return -1;
 	}
 	
@@ -28,13 +31,20 @@ int main(int argc, const char* argv[])
 		pt2.y = y1;
 		strcat(path, temp);
 		Mat image = imread(path, 0);
-		rectangle(image, pt1, pt2, scalar, 2, 8, 0);
 		Mat roi(image, Rect(pt1, pt2));
+		Mat adp;
+		equalizeHist(roi, adp);
 		Mat dst;
-		resize(roi, dst, Size(25,25), 0, 0);
+		resize(adp, dst, Size(SIZE, SIZE), 0, 0);
+		strcpy(path, "../Faces_Normalized/");
+		strcat(path, filename);
+		imwrite(path, dst);
+	#if 0
+		rectangle(image, pt1, pt2, scalar, 2, 8, 0);
+		imshow("Image", adp);
 		imshow("Image", dst);
-		imwrite(filename, dst);
 		waitKey();
+	#endif
 	}
 	return 0;
 }
