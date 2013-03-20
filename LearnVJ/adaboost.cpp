@@ -319,3 +319,4 @@ void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename)
 		(*it)->beta_t << "\n";
 	}
 }
+

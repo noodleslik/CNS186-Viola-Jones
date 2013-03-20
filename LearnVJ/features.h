@@ -43,3 +43,4 @@ set<Feature*>* GenerateRandomFeatures(int num_features);
 int CalculateFeature(Feature* feature, Mat integral_image);
 
 #endif
+

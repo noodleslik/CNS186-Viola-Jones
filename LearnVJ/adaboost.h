@@ -41,3 +41,4 @@ void FindThresholdAndPolarity(const vector<int> &positive_examples, const vector
 void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename); 
 
 #endif
+

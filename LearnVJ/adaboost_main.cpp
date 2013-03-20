@@ -9,3 +9,4 @@ int main()
 	vector<AdaBoostFeature*> first_set = RunAdaBoost(2056, 2056, 20, 5000);
 	SaveAdaBoost(first_set, filename1); 
 }
+

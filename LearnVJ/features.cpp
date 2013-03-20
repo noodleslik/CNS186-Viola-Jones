@@ -177,3 +177,4 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 
 	return (int)current_sum;
 }
+
