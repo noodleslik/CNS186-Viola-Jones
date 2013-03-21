@@ -24,7 +24,8 @@ bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right);
 // which_faces is the last face in the training set
 // which_not_faces is the last face in the negative training set
 // how_many is the number of features to return, total_set is how many to randomly generate.
-vector<AdaBoostFeature*> RunAdaBoost(int which_faces, int which_not_faces, int how_many, int total_set);
+vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int which_not_faces,
+                                     unsigned int how_many, unsigned int total_set);
 
 // Runs one round of the adaboost algorithm (calculates errors, finds best features, returns thresh, feat, pol). 
 // Also updates weightings. Modifies weightings correctly and removes the selected feature from the feature set.

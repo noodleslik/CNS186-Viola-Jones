@@ -14,21 +14,21 @@ using namespace cv;
 
 const int SUBWINDOW_SIZE = 25;
 
+enum FeatureTypeT { TWO_REC_HORIZ, TWO_REC_VERT, THREE_REC_HORIZ, THREE_REC_VERT, FOUR_REC };
 struct Feature
 {
-    enum FeatureTypeT { TWO_REC_HORIZ, TWO_REC_VERT, THREE_REC_HORIZ, THREE_REC_VERT, FOUR_REC };
-    FeatureTypeT type;
-    // Required for all feature types 
-    // (UL, LR points of rectangle 1):
-    int x1, y1; // Up Left
-    int x2, y2; // Low Right
-    // All remaining coordinates are determined since all rectangles are same size and shape 
+	FeatureTypeT type;
+	// Required for all feature types 
+	// (UL, LR points of rectangle 1):
+	int x1, y1; // Up Left
+	int x2, y2; // Low Right
+	// All remaining coordinates are determined since all rectangles are same size and shape 
 };
 
 bool operator< (const Feature& left, const Feature& right);
 
 // Valid features require that:
-//   - x1 < x2 
+//   - x1 < x2
 //   - y1 < y2
 //   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);

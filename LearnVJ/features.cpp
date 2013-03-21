@@ -33,19 +33,19 @@ bool IsValidFeature(Feature* to_check)
 	if(to_check->y1 > to_check->y2) { return false; }
 	if(to_check->x1 < 0 || to_check->x2 >= SUBWINDOW_SIZE) { return false; }
 	if(to_check->y1 < 0 || to_check->y2 >= SUBWINDOW_SIZE) { return false; }
-	if((to_check->type == Feature::TWO_REC_HORIZ || to_check->type == Feature::THREE_REC_HORIZ || 
-		to_check->type == Feature::FOUR_REC) && ((to_check->x2 + (to_check->x2 - to_check->x1)) >= SUBWINDOW_SIZE)) {
+	if((to_check->type == TWO_REC_HORIZ || to_check->type == THREE_REC_HORIZ || 
+		to_check->type == FOUR_REC) && ((to_check->x2 + (to_check->x2 - to_check->x1)) >= SUBWINDOW_SIZE)) {
 		return false;
 	}
-	if((to_check->type == Feature::TWO_REC_VERT || to_check->type == Feature::THREE_REC_VERT || 
-		to_check->type == Feature::FOUR_REC) && ((to_check->y2 + (to_check->y2 - to_check->y1)) >= SUBWINDOW_SIZE)) {
+	if((to_check->type == TWO_REC_VERT || to_check->type == THREE_REC_VERT || 
+		to_check->type == FOUR_REC) && ((to_check->y2 + (to_check->y2 - to_check->y1)) >= SUBWINDOW_SIZE)) {
 		return false;
 	}
-	if((to_check->type == Feature::THREE_REC_HORIZ) && 
+	if((to_check->type == THREE_REC_HORIZ) && 
 			((to_check->x2 + 2*(to_check->x2 - to_check->x1)) >= SUBWINDOW_SIZE)) {
 		return false;
 	}
-	if((to_check->type == Feature::THREE_REC_VERT) && 
+	if((to_check->type == THREE_REC_VERT) && 
 			((to_check->y2 + 2*(to_check->y2 - to_check->y1)) >= SUBWINDOW_SIZE)) {
 		return false;
 	}
@@ -60,7 +60,7 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 	{
 		double lowest = 0; double highest = 4; double range = (highest - lowest) + 1;
 		int type = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
-		int x1,y1,x2,y2;
+		int x1=0, y1=0, x2=0, y2=0;
 		if(type == 0 || type == 1) {
 			lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
 			x1 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
@@ -104,11 +104,11 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 		new_creation->x2 = x2;
 		new_creation->y1 = y1;
 		new_creation->y2 = y2;
-		if(type == 0) { new_creation->type = Feature::TWO_REC_HORIZ; }
-		else if(type == 1) { new_creation->type = Feature::TWO_REC_VERT; }
-		else if(type == 2) { new_creation->type = Feature::THREE_REC_HORIZ; }
-		else if(type == 3) { new_creation->type = Feature::THREE_REC_VERT; }
-		else { new_creation->type = Feature::FOUR_REC; }
+		if(type == 0) { new_creation->type = TWO_REC_HORIZ; }
+		else if(type == 1) { new_creation->type = TWO_REC_VERT; }
+		else if(type == 2) { new_creation->type = THREE_REC_HORIZ; }
+		else if(type == 3) { new_creation->type = THREE_REC_VERT; }
+		else { new_creation->type = FOUR_REC; }
 
 		if(!IsValidFeature(new_creation)) { return NULL; }
 
@@ -128,8 +128,8 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 				   integral_image.at<double>(feature->y1, feature->x2) -
 				   integral_image.at<double>(feature->y2, feature->x1);
 	// Second rectangle for horizontal 2 and 3  or 4
-	if(feature->type == Feature::TWO_REC_HORIZ || feature->type == Feature::THREE_REC_HORIZ || 
-			feature->type == Feature::FOUR_REC) {
+	if(feature->type == TWO_REC_HORIZ || feature->type == THREE_REC_HORIZ || 
+			feature->type == FOUR_REC) {
 		int second_x = feature->x2 + (feature->x2 - feature->x1);
 		current_sum -= integral_image.at<double>(feature->y1, feature->x2) +
 					   integral_image.at<double>(feature->y2, second_x) -
@@ -137,8 +137,8 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 					   integral_image.at<double>(feature->y2, feature->x2);
 	}
 	// Second rectangle for vertical 2 and 3, third rectangle for 4
-	if(feature->type == Feature::TWO_REC_VERT || feature->type == Feature::THREE_REC_VERT ||
-			feature->type == Feature::FOUR_REC) {
+	if(feature->type == TWO_REC_VERT || feature->type == THREE_REC_VERT ||
+			feature->type == FOUR_REC) {
 		int second_y = feature->y2 + (feature->y2 - feature->y1);
 		current_sum -= integral_image.at<double>(feature->y2, feature->x1) +
 					   integral_image.at<double>(second_y, feature->x2) -
@@ -146,7 +146,7 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 					   integral_image.at<double>(second_y, feature->x1);
 	}
 	// Third rectangle for horizontal 3
-	if(feature->type == Feature::THREE_REC_HORIZ) {
+	if(feature->type == THREE_REC_HORIZ) {
 		int second_x = feature->x2 + (feature->x2 - feature->x1);
 		int third_x = feature->x2 + 2*(feature->x2 - feature->x1);
 		current_sum += integral_image.at<double>(feature->y1, second_x) +
@@ -155,7 +155,7 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 					   integral_image.at<double>(feature->y2, second_x);
 	}
 	// Third rectangle for vertical 3
-	if(feature->type == Feature::THREE_REC_VERT) {
+	if(feature->type == THREE_REC_VERT) {
 		int second_y = feature->y2 + (feature->y2 - feature->y1);
 		int third_y = feature->y2 + 2*(feature->y2 - feature->y1);
 		current_sum += integral_image.at<double>(second_y, feature->x1) +
@@ -164,12 +164,12 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 					   integral_image.at<double>(third_y, feature->x1);
 	}
 	// Fourth rectangle for 4
-	if(feature->type == Feature::FOUR_REC) {
+	if(feature->type == FOUR_REC) {
 		int x1 = feature->x2;
 		int y1 = feature->y2;
 		int x2 = feature->x2 + (feature->x2 - feature->x1);
 		int y2 = feature->y2 + (feature->y2 - feature->y1);
-		current_sum += integral_image.at<double>(y1, x1) + 
+		current_sum += integral_image.at<double>(y1, x1) +
 					   integral_image.at<double>(y2, x2) -
 					   integral_image.at<double>(y1, x2) -
 					   integral_image.at<double>(y2, x1);
