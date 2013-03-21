@@ -1,12 +1,24 @@
 #include "adaboost.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 using namespace std;
 
-int main()
+int main(int argc, const char* argv[])
 {
 	const char* const filename1 = "billabingbong.txt";
-	//RunAdaBoost(n_positive, n_negative, how_many_features, n_random_feature)
-	vector<AdaBoostFeature*> first_set = RunAdaBoost(2056, 2056, 20, 5000);
-	SaveAdaBoost(first_set, filename1); 
+	if(argc < 5)
+	{
+		printf("\nUsage: %s n_positive n_negative "
+		       "how_many_feature n_random_feature\n\n", argv[0]);
+		return 1;
+	}
+	unsigned int n_pos = atoi(argv[1]); // 1000
+	unsigned int n_neg = atoi(argv[2]); // 2000
+	unsigned int how_many = atoi(argv[3]); // 20
+	unsigned int n_random = atoi(argv[4]); // 5000
+	vector<AdaBoostFeature*> first_set = \
+		RunAdaBoost(n_pos, n_neg, how_many, n_random);
+	SaveAdaBoost(first_set, filename1);
+	return 0;
 }
 

@@ -134,6 +134,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 		*it /= weight_sums;
 
 	/** Step 2. Find the feature with the best error */
+	// 找到错误率最小的特征（弱分类器）
 	cout << "Finding best feature..." << endl;
 	int cur_threshold, cur_polarity;
 	int best_threshold = 0, best_polarity = 0;
