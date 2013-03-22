@@ -10,3 +10,4 @@
 cv::Mat IntegralImage(cv::Mat img);
 
 #endif
+

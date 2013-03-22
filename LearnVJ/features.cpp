@@ -52,6 +52,59 @@ bool IsValidFeature(Feature* to_check)
 	return true;
 }
 
+set<Feature*>* GenerateAllFeatures(int step = 1)
+{
+	int x, y, w, h, type;
+	int width, height;
+	Feature feature;
+	set<Feature*>* storage = new set<Feature*>();
+	for(type=0; type<5; type++)
+	{
+		for(w=1; w<SUBWINDOW_SIZE/2; w+=step)
+		{
+			for(h=1; h<SUBWINDOW_SIZE/2; h+=step)
+			{
+				width = w;
+				height = h;
+				switch(type)
+				{
+					case TWO_REC_HORIZ:         width = 2*w;  break;
+					case THREE_REC_HORIZ:       width = 3*w;  break;
+					case TWO_REC_VERT:          height = 2*h; break;
+					case THREE_REC_VERT:        height = 3*h; break;
+					case FOUR_REC: width = 2*w; height = 2*h; break;
+				}
+				if(width > SUBWINDOW_SIZE)
+				{
+					w = SUBWINDOW_SIZE;
+					break;
+				}
+				if(height > SUBWINDOW_SIZE)
+				{
+					break;
+				}
+				for(x=0; x<SUBWINDOW_SIZE-width; x+=step)
+				{
+					for(y=0; y<SUBWINDOW_SIZE-height; y+=step)
+					{
+						feature.type = (FeatureTypeT)type;
+						feature.x1 = x;
+						feature.y1 = y;
+						feature.x2 = x+w;
+						feature.y2 = y+h;
+						if(IsValidFeature(&feature))
+						{
+							Feature* new_creation = new Feature(feature);
+							storage->insert(new_creation);
+						}
+					}//for y
+				}//for x
+			}// for h
+		}// for w
+	}// for type
+	return storage;
+}
+
 set<Feature*>* GenerateRandomFeatures(int num_features)
 {
 	set<Feature*>* storage = new set<Feature*>();

@@ -14,7 +14,11 @@ using namespace cv;
 
 const int SUBWINDOW_SIZE = 25;
 
-enum FeatureTypeT { TWO_REC_HORIZ, TWO_REC_VERT, THREE_REC_HORIZ, THREE_REC_VERT, FOUR_REC };
+enum FeatureTypeT {
+	TWO_REC_HORIZ = 0, TWO_REC_VERT = 1,
+	THREE_REC_HORIZ = 2, THREE_REC_VERT = 3, FOUR_REC = 4
+};
+
 struct Feature
 {
 	FeatureTypeT type;
@@ -23,6 +27,13 @@ struct Feature
 	int x1, y1; // Up Left
 	int x2, y2; // Low Right
 	// All remaining coordinates are determined since all rectangles are same size and shape 
+	Feature() : x1(0), y1(0), x2(0), y2(0) {}
+	Feature(Feature& f)
+	{
+		type = f.type;
+		x1 = f.x1; x2 = f.x2;
+		y1 = f.y1; y2 = f.y2;
+	}
 };
 
 bool operator< (const Feature& left, const Feature& right);
@@ -33,7 +44,7 @@ bool operator< (const Feature& left, const Feature& right);
 //   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);
 
-// The text here is out of date.
+set<Feature*>* GenerateAllFeatures(int step = 1);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.

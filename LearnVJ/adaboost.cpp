@@ -99,16 +99,20 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	}
 	
 	// Generate random features. 产生随机特征
-	set<Feature*>* random_features = GenerateRandomFeatures(total_set);
-	cout << random_features->size() << " unique random features generated." << endl; 
+	set<Feature*>* feature_set;
+	if(total_set)
+		feature_set = GenerateRandomFeatures(total_set);
+	else
+		feature_set = GenerateAllFeatures(2);
+	cout << feature_set->size() << " unique features generated." << endl; 
 
 	// Run AdaBoost rounds. Get one best feature one iteration
 	for(i=0; i < how_many; ++i)
 	{
 		cout << "Running round " << i << " of Adaboost procedure." << endl;
-		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, random_features);
+		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_set);
 		container.push_back(best_feature);
-		random_features->erase(best_feature->feature);
+		feature_set->erase(best_feature->feature);
 	}
 
 	return container;
@@ -150,7 +154,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	// for each random feature, find a *single* best feature
 	for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it)
 	{
-		if(which_feature % 100 == 0)
+		if(which_feature % 500 == 0)
 			cout << "Calculating feature " << which_feature << endl;
 		which_feature++;
 		
