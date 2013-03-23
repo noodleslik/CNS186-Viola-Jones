@@ -103,7 +103,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	if(total_set)
 		feature_set = GenerateRandomFeatures(total_set);
 	else
-		feature_set = GenerateAllFeatures(2);
+		feature_set = GenerateAllFeatures(1);
 	cout << feature_set->size() << " unique features generated." << endl; 
 
 	// Run AdaBoost rounds. Get one best feature one iteration
@@ -323,6 +323,8 @@ void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename)
 {
 	ofstream save_file;
 	save_file.open(filename);
+	save_file<<SUBWINDOW_SIZE<<endl;
+	save_file<<to_save.size()<<endl;
 	vector<AdaBoostFeature*>::const_iterator it;
 	for(it = to_save.begin(); it != to_save.end(); ++it)
 	{
@@ -332,5 +334,6 @@ void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename)
 		(*it)->threshold << " " << (*it)->polarity << " "<<
 		(*it)->beta_t << "\n";
 	}
+	save_file.close();
 }
 

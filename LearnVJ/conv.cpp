@@ -15,13 +15,17 @@ int main()
 	ofstream fout;
 	fout.open("trees.txt");
 	
-	unsigned int s, t, type, x1, y1, x2, y2;// UL, LR points of rectangle1
-	int polarity;
+	unsigned int s, t, trees;
+	unsigned int type, x1, y1, x2, y2;// UL, LR points of rectangle1
+	int polarity, size;
 	double threshold, beta_t, stage_threshold;
 	s = 1; t = 1;
 	stage_threshold = 0;
+	fin>>size>>trees;
+	// misc at begin of file
+	fout<<size<<" "<<size<<endl<<"1\n"<<trees<<endl;
 	// Assume we have only 1 stage
-	while(!fin.eof())
+	while(!fin.eof() && t<=trees)
 	{
 		fin>>type>>x1>>y1>>x2>>y2;
 		fin>>threshold>>polarity>>beta_t;
@@ -75,7 +79,7 @@ int main()
 		// titled
 		fout<<s<<" "<<t<<" "<<1<<" "<<0<<endl;
 		// threshold
-		fout<<s<<" "<<t<<" "<<1<<" "<<threshold*polarity<<endl;
+		fout<<s<<" "<<t<<" "<<1<<" "<<threshold*polarity/size/size<<endl;
 		// left and right value
 		double alpha = -log(beta_t);
 		if(polarity == 1)
@@ -98,8 +102,6 @@ int main()
 	}
 	// stage threshold
 	fout<<s<<" "<< stage_threshold / 2 <<endl;
-	// misc should at begin of file
-	fout<<"25 25\n"<<"1\n"<<t-1<<endl;
 	fin.close();
 	fout.close();
 	return 0;
