@@ -4,6 +4,7 @@
 
 #include "cv.h"
 #include "highgui.h"
+#include <time.h>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -103,16 +104,22 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	if(total_set)
 		feature_set = GenerateRandomFeatures(total_set);
 	else
-		feature_set = GenerateAllFeatures(1);
+		feature_set = GenerateAllFeatures(2);
 	cout << feature_set->size() << " unique features generated." << endl; 
 
+	clock_t start;
+	double minutes;
 	// Run AdaBoost rounds. Get one best feature one iteration
 	for(i=0; i < how_many; ++i)
 	{
-		cout << "Running round " << i << " of Adaboost procedure." << endl;
+		start = clock();
+		cout <<"*****Running round "<<i<<" of Adaboost procedure."<< endl;
 		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_set);
 		container.push_back(best_feature);
 		feature_set->erase(best_feature->feature);
+		minutes = double(clock()-start)/CLOCKS_PER_SEC/60;
+		cout<<"Using "<<minutes<<" minutes."<<endl;
+		cout<<minutes*(how_many-i)<<" minutes Remained"<<endl;
 	}
 
 	return container;
@@ -226,42 +233,47 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 // Yes this is inefficient. I am lazy. QED.
 // Try every example value as the threshold. This is WLOG.
 // 找出某个弱分类器的阈值，极性和错误率。
-void FindThresholdAndPolarity(const vector<int> &positive_examples, const vector<int> &negative_examples, 
+void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<int> &negative_results, 
                               vector<double> &pos_weights, vector<double> &neg_weights,
                               int* threshold, int* polarity, double* error)
 {
-	unsigned int i;
+	unsigned int i, its, total_samples;
 	vector<int>::const_iterator it;
 	int best_threshold = 0;
 	int best_polarity = 0;
 	double pos_pol_sum, neg_pol_sum; // 迭代误差之和
 	double best_error;
 	best_error = numeric_limits<double>::infinity(); // 错误率初始化为无穷大
-	// 错误率为权重之和，论文中为加权错误率w*|h-y|，实际当正确分类时|h-y|=0
-	// for weak classifier of each POSITIVE sample, update threshold, polarity and error
-	// 在正样本中。更新弱分类器的阈值，极性和错误率。找最小的错误率。
-	for(it = positive_examples.begin(); it != positive_examples.end(); ++it)
+	// 论文中为加权错误率=w*|h-y|，当正确分类时|h-y|=0
+	// for weak classifier of each sample, update threshold, polarity and error
+	total_samples = positive_results.size() + negative_results.size();
+	for(its = 0; its < total_samples; its++)
 	{
-		pos_pol_sum = 0; neg_pol_sum = 0;
-		int cur_threshold = *it; // <= as a threshold，对于某个正样本
-		// 计算当前*正样本*作为阈值的错误率
-		for(i=0; i < positive_examples.size(); ++i) {
+		pos_pol_sum = 0; // 作为*正*特征的加权错误率之和 S+
+		neg_pol_sum = 0; // 作为*负*特征的加权错误率之和 N+
+		int cur_threshold;
+		if(its < positive_results.size())
+			cur_threshold = positive_results[its]; // <= as a threshold
+		else
+			cur_threshold = negative_results[its-positive_results.size()];
+		// 计算当前*样本权值*作为*阈值*的错误率
+		for(i=0; i < positive_results.size(); ++i) {
 			// Misclasified with polarity of 1
-			if(positive_examples[i] >= cur_threshold) { 
+			if(positive_results[i] >= cur_threshold) { 
 				pos_pol_sum += pos_weights.at(i);
 			}
 			// Misclassified with polarity of -1
-			if(positive_examples[i] * -1 >= cur_threshold * -1) {
+			if(positive_results[i] * -1 >= cur_threshold * -1) {
 				neg_pol_sum += pos_weights.at(i);
 			}
 		}
-		for(i=0; i < negative_examples.size(); ++i) {
+		for(i=0; i < negative_results.size(); ++i) {
 			// Misclasified with polarity of 1
-			if(negative_examples[i] < cur_threshold) { 
+			if(negative_results[i] < cur_threshold) { 
 				pos_pol_sum += neg_weights.at(i);
 			}
 			// Misclassified with polarity of -1
-			if(negative_examples[i] * -1 < cur_threshold * -1) {
+			if(negative_results[i] * -1 < cur_threshold * -1) {
 				neg_pol_sum += neg_weights.at(i);
 			}
 		}
@@ -272,45 +284,7 @@ void FindThresholdAndPolarity(const vector<int> &positive_examples, const vector
 		}
 		if(neg_pol_sum < best_error) {
 			best_threshold = cur_threshold;
-			best_polarity = -1;
-			best_error = neg_pol_sum;
-		}
-	}
-	// for weak classifier of each NEGATIVE sample, update threshold, polarity and error
-	// 在负样本中。更新弱分类器的阈值，极性和错误率。找最小的错误率。
-	for(it = negative_examples.begin(); it != negative_examples.end(); ++it)
-	{
-		pos_pol_sum = 0; neg_pol_sum = 0;
-		int cur_threshold = *it; // <= as a threshold，对于某个负样本
-		// 计算当前*负样本*作为阈值的错误率
-		for(i=0; i < positive_examples.size(); ++i) {
-			// Misclasified with polarity of 1
-			if(positive_examples[i] >= cur_threshold) { 
-				pos_pol_sum += pos_weights.at(i);
-			}
-			// Misclassified with polarity of -1
-			if(positive_examples[i] * -1 >= cur_threshold * -1) {
-				neg_pol_sum += pos_weights.at(i);
-			}
-		}
-		for(i=0; i < negative_examples.size(); ++i) {
-			// Misclasified with polarity of 1
-			if(negative_examples[i] < cur_threshold) { 
-				pos_pol_sum += neg_weights.at(i);
-			}
-			// Misclassified with polarity of -1
-			if(negative_examples[i] * -1 < cur_threshold * -1) {
-				neg_pol_sum += neg_weights.at(i);
-			}
-		}
-		if(pos_pol_sum < best_error) {
-			best_threshold = cur_threshold;
-			best_polarity = 1;
-			best_error = pos_pol_sum;
-		}
-		if(neg_pol_sum < best_error) {
-			best_threshold = cur_threshold;
-			best_polarity = -1;
+			best_polarity = -1; 
 			best_error = neg_pol_sum;
 		}
 	}

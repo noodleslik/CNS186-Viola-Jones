@@ -52,37 +52,35 @@ bool IsValidFeature(Feature* to_check)
 	return true;
 }
 
-set<Feature*>* GenerateAllFeatures(int step = 1)
+set<Feature*>* GenerateAllFeatures(int step)
 {
 	int x, y, w, h, type;
 	int width, height;
 	Feature feature;
 	set<Feature*>* storage = new set<Feature*>();
-	for(type=0; type<5; type++)
+	for(type=0; type<FOUR_REC+1; type++)
 	{
 		for(w=1; w<SUBWINDOW_SIZE/2; w+=step)
 		{
+			switch(type)
+			{
+				case TWO_REC_HORIZ:         width = 2*w;  break;
+				case THREE_REC_HORIZ:       width = 3*w;  break;
+				default:                    width = w;    break;
+			}
+			if(width > SUBWINDOW_SIZE)
+				break;
 			for(h=1; h<SUBWINDOW_SIZE/2; h+=step)
 			{
-				width = w;
-				height = h;
 				switch(type)
 				{
-					case TWO_REC_HORIZ:         width = 2*w;  break;
-					case THREE_REC_HORIZ:       width = 3*w;  break;
 					case TWO_REC_VERT:          height = 2*h; break;
 					case THREE_REC_VERT:        height = 3*h; break;
 					case FOUR_REC: width = 2*w; height = 2*h; break;
-				}
-				if(width > SUBWINDOW_SIZE)
-				{
-					w = SUBWINDOW_SIZE;
-					break;
+					default:                    height = h;   break;
 				}
 				if(height > SUBWINDOW_SIZE)
-				{
 					break;
-				}
 				for(x=0; x<SUBWINDOW_SIZE-width; x+=step)
 				{
 					for(y=0; y<SUBWINDOW_SIZE-height; y+=step)
@@ -111,10 +109,11 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 	srand(time(NULL));
 	for(int i=0; i<num_features; ++i)
 	{
-		double lowest = 0; double highest = 4; double range = (highest - lowest) + 1;
+		double lowest = 0; double highest = FOUR_REC; double range = (highest - lowest) + 1;
 		int type = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+
 		int x1=0, y1=0, x2=0, y2=0;
-		if(type == 0 || type == 1) {
+		if(type == TWO_REC_HORIZ || type == TWO_REC_VERT) {
 			lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
 			x1 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
 			
@@ -128,43 +127,48 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 			lowest = y1 + 1; highest = SUBWINDOW_SIZE - 1; range = (highest - lowest) + 1;
 			y2 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1))); 
 		} // For type = 1 we will simply reverse x and y
-		else if(type == 2 || type == 3) { 
+		else if(type == THREE_REC_HORIZ || type == THREE_REC_VERT) { 
 			lowest = 0; highest = SUBWINDOW_SIZE - 1 - 3; range = (highest - lowest) + 1;
 			x1 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+			
 			lowest = 0; highest = SUBWINDOW_SIZE - 1 - 1; range = (highest - lowest) + 1;
 			y1 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+			
 			lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 3; range = (highest - lowest) + 1; 
 			int x_diff = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+			
 			x2 = x1 + x_diff;
 			lowest = y1 + 1; highest = SUBWINDOW_SIZE - 1; range = (highest - lowest) + 1;
 			y2 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
 		} // For type = 3 we will simply reverse x and y
-		else if(type == 4) { 
+		else if(type == FOUR_REC) { 
 			lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
 			x1 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+			
 			lowest = 0; highest = SUBWINDOW_SIZE - 1 - 2; range = (highest - lowest) + 1;
 			y1 = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+			
 			lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - x1) / 2; range = (highest - lowest) + 1; 
 			int x_diff = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
+			
 			lowest = 1; highest = ((SUBWINDOW_SIZE - 1) - y1) / 2; range = (highest - lowest) + 1;
 			int y_diff = lowest + (int)(range * (rand()/((double)RAND_MAX + 1)));
 			x2 = x1 + x_diff;
 			y2 = y1 + y_diff;
 		}
-		if(type == 1 || type == 3) { int temp = x1; x1 = y1; y1 = temp; temp = x2; x2 = y2; y2 = temp; }
+		if(type == TWO_REC_VERT || type == THREE_REC_VERT) {
+			int temp = x1; x1 = y1; y1 = temp;
+			temp = x2; x2 = y2; y2 = temp;
+		}
 		Feature* new_creation = new Feature();
 		new_creation->x1 = x1;
 		new_creation->x2 = x2;
 		new_creation->y1 = y1;
 		new_creation->y2 = y2;
-		if(type == 0) { new_creation->type = TWO_REC_HORIZ; }
-		else if(type == 1) { new_creation->type = TWO_REC_VERT; }
-		else if(type == 2) { new_creation->type = THREE_REC_HORIZ; }
-		else if(type == 3) { new_creation->type = THREE_REC_VERT; }
-		else { new_creation->type = FOUR_REC; }
-
+		new_creation->type = (FeatureTypeT)type;
+		
 		if(!IsValidFeature(new_creation)) { return NULL; }
-
+		
 		storage->insert(new_creation);
 	}
 	return storage;
@@ -180,7 +184,7 @@ int CalculateFeature(Feature* feature, Mat integral_image)
 				   integral_image.at<double>(feature->y2, feature->x2) -
 				   integral_image.at<double>(feature->y1, feature->x2) -
 				   integral_image.at<double>(feature->y2, feature->x1);
-	// Second rectangle for horizontal 2 and 3  or 4
+	// Second rectangle for horizontal 2 , 3 and 4
 	if(feature->type == TWO_REC_HORIZ || feature->type == THREE_REC_HORIZ || 
 			feature->type == FOUR_REC) {
 		int second_x = feature->x2 + (feature->x2 - feature->x1);

@@ -44,7 +44,7 @@ bool operator< (const Feature& left, const Feature& right);
 //   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);
 
-set<Feature*>* GenerateAllFeatures(int step = 1);
+set<Feature*>* GenerateAllFeatures(int step);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.
