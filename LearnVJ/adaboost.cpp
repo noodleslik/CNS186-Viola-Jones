@@ -113,10 +113,18 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	for(i=0; i < how_many; ++i)
 	{
 		start = clock();
-		cout <<"*****Running round "<<i<<" of Adaboost procedure."<< endl;
+		cout <<"======Running round "<<i<<" of Adaboost procedure.======"<< endl;
 		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_set);
-		container.push_back(best_feature);
-		feature_set->erase(best_feature->feature);
+		if(best_feature)
+		{
+			container.push_back(best_feature);
+			feature_set->erase(best_feature->feature);
+		}
+		else
+		{
+			cout<<"Can't find good feature any more"<<endl;
+			break;
+		}
 		minutes = double(clock()-start)/CLOCKS_PER_SEC/60;
 		cout<<"Using "<<minutes<<" minutes."<<endl;
 		cout<<minutes*(how_many-i)<<" minutes Remained"<<endl;
@@ -161,7 +169,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	// for each random feature, find a *single* best feature
 	for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it)
 	{
-		if(which_feature % 500 == 0)
+		if(which_feature % 1000 == 0)
 			cout << "Calculating feature " << which_feature << endl;
 		which_feature++;
 		
@@ -189,6 +197,10 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 			best_feature = *feature_it;
 		}
 	}
+	// 错误率大于0.5则舍弃
+	if(best_error > 0.5)
+		return NULL;
+	cout<<"Best feature weighted error rate "<<best_error<<endl;
 	
 	/** Step 3. Update the weights */
 	cout << "Updating weights..." << endl;
@@ -204,6 +216,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	// 更新正/负样本权重
 	unsigned int i;
 	double beta = (best_error)/(1 - best_error);
+	cout << "Use beta = " << beta << " to reduce weight." <<endl;
 	// use beta to update weights of each Positive and Negative feature
 	// 如果正/负样本可以被正确分类，则更新该*样本*的权重
 	assert(positive_results.size() == pos_weights.size());

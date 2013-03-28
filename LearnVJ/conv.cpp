@@ -81,22 +81,10 @@ int main()
 		// threshold
 		fout<<s<<" "<<t<<" "<<1<<" "<<threshold*polarity/size/size<<endl;
 		// left and right value
-		double alpha = -log(beta_t);
-		if(polarity == 1)
-		{
-			fout<<s<<" "<<t<<" "<<1<<" "<<alpha<<endl;
-			fout<<s<<" "<<t<<" "<<1<<" "<<"0.0"<<endl;
-		}
-		else if(polarity == -1)
-		{
-			fout<<s<<" "<<t<<" "<<1<<" "<<alpha<<endl;
-			fout<<s<<" "<<t<<" "<<1<<" "<<"0.0"<<endl;
-		}
-		else
-		{
-			cout<<"Polarity error"<<endl;
-			return -1;
-		}
+		double alpha = log(1./beta_t);
+		//cout << beta_t << "  " << alpha <<"\n";
+		fout<<s<<" "<<t<<" "<<1<<" "<<alpha<<endl; //left
+		fout<<s<<" "<<t<<" "<<1<<" "<<"0.0"<<endl; //right
 		stage_threshold += alpha;
 		t++;
 	}

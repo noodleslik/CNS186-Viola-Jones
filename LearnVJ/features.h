@@ -1,7 +1,8 @@
 #ifndef LEARNVJ_FEATURES_H_
 #define LEARNVJ_FEATURES_H_
 
-#include "cv.h"
+#include "feature_type.h"
+#include <opencv2/opencv.hpp>
 #include <set>
 
 using namespace std;
@@ -13,11 +14,6 @@ using namespace cv;
  */
 
 const int SUBWINDOW_SIZE = 25;
-
-enum FeatureTypeT {
-	TWO_REC_HORIZ = 0, TWO_REC_VERT = 1,
-	THREE_REC_HORIZ = 2, THREE_REC_VERT = 3, FOUR_REC = 4
-};
 
 struct Feature
 {
