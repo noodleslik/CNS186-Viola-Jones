@@ -1,6 +1,8 @@
 #include "mshcd.hpp"
 #include "feature_type.h"
-//#include <opencv2/opencv.hpp>
+#ifdef WITH_OPENCV
+#include <opencv2/opencv.hpp>
+#endif
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -8,7 +10,11 @@ using namespace std;
 int main()
 {
 	MSHCD mshcd;
+#ifndef WITH_OPENCV
 	mshcd.Run("gray_img.raw", "billabingbong.txt");
+#else
+	mshcd.Run("gray_img.jpg", "billabingbong.txt");
+#endif
 	return 0;
 }
 
@@ -108,10 +114,8 @@ void MSHCD::GetIntergralImages(const char* imagefile)
 {
 	u32 i, j, size;
 	PRINT_FUNCTION_INFO();
-	// read grayscale image data from raw image
-	#define USE_RAW
-#ifdef USE_RAW
-	FILE* fin;
+#ifndef WITH_OPENCV
+	FILE *fin;
 	printf("read grayscale image data from raw image.\n");
 	fin = fopen(imagefile, "rb");
 	assert(fin);
@@ -129,8 +133,9 @@ void MSHCD::GetIntergralImages(const char* imagefile)
 	printf("%d X %d\n", image.width, image.height);
 	size = image.width*image.height;
 	image.data = (u8*)malloc(size*sizeof(u8));
-	memcpy(image.data, img.data, size);
-#endif	
+	memcpy(image.data, img.data, size*sizeof(u8));
+#endif
+	
 	image.idata1 = (u32*)malloc(size*sizeof(u32));
 	memset(image.idata1, 0, size*sizeof(u32));
 	image.idata2 = (u32*)malloc(size*sizeof(u32));
@@ -340,12 +345,12 @@ void MSHCD::GetIntegralCanny()
 		}
 	}
 	/*Computation of the discrete gradient of the image.*/
+	long grad_x, grad_y;
 	u32 *grad = (u32*)malloc(image.width*image.height*(sizeof(u32)));
 	for(i=1; i<image.width-1; i++)
 	{
 		for(j=1; j<image.height-1; j++)
-		{
-			u32 grad_x, grad_y;
+		{		
 			grad_x = -image(CANNY,i-1,j-1)+image(CANNY,i+1,j-1)-2*image(CANNY,i-1,j)+
 					2*image(CANNY,i+1,j)-image(CANNY,i-1,j+1)+image(CANNY,i+1,j+1);
 			grad_y = image(CANNY,i-1,j-1)+2*image(CANNY,i,j-1)+image(CANNY,i+1,j-1)-
@@ -353,10 +358,11 @@ void MSHCD::GetIntegralCanny()
 			*(grad+j*image.width+i) = abs(grad_x) + abs(grad_y);
 		}
 	}
+	u32 col;
 	/* Suppression of non-maxima of the gradient and computation of the integral Canny image. */
 	for(i=0; i<image.width; i++)
 	{
-		u32 col=0;
+		col = 0;
 		for(j=0; j<image.height; j++)
 		{
 			col += *(grad+j*image.width+i);

@@ -1,11 +1,11 @@
 #ifndef __MSHCD_HPP__
 #define __MSHCD_HPP__
 
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 #include <vector>
 using namespace std;
 
@@ -69,6 +69,8 @@ typedef struct Image
 			return *(idata2 + y*width + x);
 		if(type == CANNY)
 			return *(cdata + y*width + x);
+		else
+			printf("Error: Unknow Image Type!\n");
 		return *(idata1 + y*width + x);
 	}
 }Image;
@@ -89,6 +91,8 @@ typedef struct Point
 #endif
 
 extern u32 GetHaarCascade(const char* filename, vector<Stage>& Stages);
+
+#define WITH_OPENCV
 
 typedef struct MSHCD
 {

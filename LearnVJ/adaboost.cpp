@@ -4,7 +4,7 @@
 
 #include "cv.h"
 #include "highgui.h"
-#include <time.h>
+#include <ctime>
 #include <cmath>
 #include <cstdio>
 #include <cstring>

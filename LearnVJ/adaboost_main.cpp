@@ -1,6 +1,6 @@
 #include "adaboost.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 using namespace std;
 
 int main(int argc, const char* argv[])
