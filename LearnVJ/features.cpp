@@ -6,7 +6,7 @@
 
 using namespace std;
 using namespace cv;
-
+/*
 bool operator < (const Feature& left, const Feature& right)
 {
 	// Order by type (in the order given in the enum)
@@ -25,7 +25,7 @@ bool operator < (const Feature& left, const Feature& right)
 	// Completely equal
 	return false;
 }
-
+*/
 // Requirements are listed in the header file.
 bool IsValidFeature(Feature* to_check)
 {
@@ -58,32 +58,34 @@ set<Feature*>* GenerateAllFeatures(int step)
 	int width, height;
 	Feature feature;
 	set<Feature*>* storage = new set<Feature*>();
-	for(type=0; type<FOUR_REC+1; type++)
+	for(type = 0; type < FOUR_REC+1; type++) //type
 	{
-		for(w=1; w<SUBWINDOW_SIZE/2; w+=step)
+		for(w = 1; w < SUBWINDOW_SIZE; w += step) //width
 		{
 			switch(type)
 			{
-				case TWO_REC_HORIZ:         width = 2*w;  break;
-				case THREE_REC_HORIZ:       width = 3*w;  break;
-				default:                    width = w;    break;
+				case TWO_REC_HORIZ:      width = 2*w; break;
+				case THREE_REC_HORIZ:    width = 3*w; break;
+				case FOUR_REC:           width = 2*w; break;
+				default:                 width = w;   break;
 			}
 			if(width > SUBWINDOW_SIZE)
 				break;
-			for(h=1; h<SUBWINDOW_SIZE/2; h+=step)
+			for(h = 1; h < SUBWINDOW_SIZE; h += step) //height
 			{
 				switch(type)
 				{
-					case TWO_REC_VERT:          height = 2*h; break;
-					case THREE_REC_VERT:        height = 3*h; break;
-					case FOUR_REC: width = 2*w; height = 2*h; break;
-					default:                    height = h;   break;
+					case TWO_REC_VERT:      height = 2*h; break;
+					case THREE_REC_VERT:    height = 3*h; break;
+					case FOUR_REC:          height = 2*h; break;
+					default:                height = h;   break;
 				}
 				if(height > SUBWINDOW_SIZE)
 					break;
-				for(x=0; x<SUBWINDOW_SIZE-width; x+=step)
+				// UL position
+				for(x = 0; x < SUBWINDOW_SIZE-width; x += step)
 				{
-					for(y=0; y<SUBWINDOW_SIZE-height; y+=step)
+					for(y = 0; y < SUBWINDOW_SIZE-height; y += step)
 					{
 						feature.type = (FeatureTypeT)type;
 						feature.x1 = x;
@@ -95,10 +97,10 @@ set<Feature*>* GenerateAllFeatures(int step)
 							Feature* new_creation = new Feature(feature);
 							storage->insert(new_creation);
 						}
-					}//for y
-				}//for x
-			}// for h
-		}// for w
+					}
+				}
+			}// for height
+		}// for width
 	}// for type
 	return storage;
 }

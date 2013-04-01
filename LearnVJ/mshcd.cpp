@@ -14,6 +14,7 @@ int main()
 	mshcd.Run("gray_img.raw", "billabingbong.txt");
 #else
 	mshcd.Run("gray_img.jpg", "billabingbong.txt");
+	mshcd.ShowDetectionResult("gray_img.jpg");
 #endif
 	return 0;
 }
@@ -35,8 +36,8 @@ u32 MSHCD::GetHaarCascade(const char* filename, vector<Stage>& Stages)
 		Tree tree;
 		fin>>type>>x1>>y1>>x2>>y2;
 		fin>>threshold>>polarity>>beta_t;
-		cout<<type<<"["<<x1<<", "<<y1<<"]["<<x2<<", "<<y2<<"] "
-			<<threshold<<" "<<polarity<<" "<<beta_t<<endl;
+		/*cout<<type<<"["<<x1<<", "<<y1<<"]["<<x2<<", "<<y2<<"] "
+			<<threshold<<" "<<polarity<<" "<<beta_t<<endl;*/
 		// two or three rects
 		u32 w = x2 - x1;
 		u32 h = y2 - y1;
@@ -77,12 +78,11 @@ u32 MSHCD::GetHaarCascade(const char* filename, vector<Stage>& Stages)
 			return -1;
 		}
 		tree.tilted = 0;
-		tree.threshold = threshold/size/size;
+		tree.threshold = threshold/1/1;
 		tree.polarity = polarity;
 		
-		double alpha = log(1./beta_t);
-		tree.alpha = alpha;
-		stage_threshold += alpha;		
+		tree.alpha = log(1./beta_t);
+		stage_threshold += tree.alpha;		
 		stage.trees.push_back(tree);
 		t++;
 	}
@@ -299,7 +299,7 @@ double MSHCD::TreeObjectDetection(Tree& tree, double Scale, Point& point,
 		Rectangle_sum += (image(II1, rx2, ry2) + image(II1, rx1, ry1)
 						- image(II1, rx2, ry1) - image(II1, rx1, ry2)) * rect.weight;
 	}
-	Rectangle_sum *= InverseArea;
+	Rectangle_sum *= 1;
 	if(Rectangle_sum*tree.polarity < tree.threshold*vnorm*tree.polarity)
 		return tree.alpha;
 	else
@@ -469,4 +469,28 @@ void MSHCD::PrintDetectionResult()
 	fclose(fout);
 	PRINT_FUNCTION_END_INFO();
 }
+
+#ifdef WITH_OPENCV
+void MSHCD::ShowDetectionResult(const char* file)
+{
+	u32 i_obj;
+	cv::Point pt1, pt2;
+	cv::Mat image = cv::imread(file, 1);
+	cv::Scalar scalar(255, 255, 0, 0);
+	if(objects.size() == 0)
+		return;
+	for(i_obj=0; i_obj<objects.size(); i_obj++)
+	{
+		Rectangle &rect = objects[i_obj];
+		pt1.x = rect.x;
+		pt1.y = rect.y;
+		pt2.x = pt1.x + rect.width;
+		pt2.y = pt1.y + rect.height;
+		rectangle(image, pt1, pt2, scalar, 3, 8, 0);
+	}
+	cv::imshow("result", image);
+	cv::waitKey();
+	cv::imwrite("result.jpg", image);
+}
+#endif
 

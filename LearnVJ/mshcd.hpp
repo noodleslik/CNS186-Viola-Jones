@@ -110,6 +110,9 @@ typedef struct MSHCD
 	double TreeObjectDetection(Tree& tree, double Scale, Point& point,
 		                       u32 width, u32 height);
 	void PrintDetectionResult();
+#ifdef WITH_OPENCV
+	void ShowDetectionResult(const char* file);
+#endif
 	vector<Rectangle> merge(vector<Rectangle> objs, u32 min_neighbors);
 	void GetIntegralCanny();
 }MSHCD;

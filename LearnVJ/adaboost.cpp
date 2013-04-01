@@ -14,7 +14,7 @@
 
 using namespace std;
 using namespace cv;
-
+/*
 bool operator < (const AdaBoostFeature& left, const AdaBoostFeature& right)
 {// compare two feature by feature/threshold/polarity
 	if(left.feature < right.feature) { return true; } if(right.feature < left.feature) { return false; }
@@ -22,7 +22,7 @@ bool operator < (const AdaBoostFeature& left, const AdaBoostFeature& right)
 	if(left.polarity < right.polarity) { return true; } if(right.polarity < left.polarity) { return false; }
 	return false;
 }
-
+*/
 const char* const base_positive = "../Faces_Normalized/";
 const char* const base_negative = "../Negative_Dataset/";
 const char* const extension = ".jpg";
