@@ -16,9 +16,10 @@ struct AdaBoostFeature
 	int threshold;
 	int polarity; // -1 or 1, 极性
 	double beta_t; 
+	size_t feature_id;
 };
 
-bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right); 
+//bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right); 
 
 // Runs the overall adaboost algorithm
 // which_faces is the last face in the training set
@@ -30,8 +31,8 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 // Runs one round of the adaboost algorithm (calculates errors, finds best features, returns thresh, feat, pol). 
 // Also updates weightings. Modifies weightings correctly and removes the selected feature from the feature set.
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
-                                  vector<double> &pos_weights, vector<double> &neg_weights, 
-                                  set<Feature*> *feature_set);
+                                  vector<double> &pos_weights, vector<double> &neg_weights,
+                                  vector<Feature*> *feature_set);
 
 // Given a set of positive and negative values of a particular feature,Puts the best
 // threshold and polarity as well as total error based on weightings into the given vars

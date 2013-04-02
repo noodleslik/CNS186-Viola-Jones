@@ -52,12 +52,12 @@ bool IsValidFeature(Feature* to_check)
 	return true;
 }
 
-set<Feature*>* GenerateAllFeatures(int step)
+vector<Feature*>* GenerateAllFeatures(int step)
 {
 	int x, y, w, h, type;
 	int width, height;
 	Feature feature;
-	set<Feature*>* storage = new set<Feature*>();
+	vector<Feature*>* storage = new vector<Feature*>();
 	for(type = 0; type < FOUR_REC+1; type++) //type
 	{
 		for(w = 1; w < SUBWINDOW_SIZE; w += step) //width
@@ -95,7 +95,7 @@ set<Feature*>* GenerateAllFeatures(int step)
 						if(IsValidFeature(&feature))
 						{
 							Feature* new_creation = new Feature(feature);
-							storage->insert(new_creation);
+							storage->push_back(new_creation);
 						}
 					}
 				}
@@ -105,9 +105,9 @@ set<Feature*>* GenerateAllFeatures(int step)
 	return storage;
 }
 
-set<Feature*>* GenerateRandomFeatures(int num_features)
+vector<Feature*>* GenerateRandomFeatures(int num_features)
 {
-	set<Feature*>* storage = new set<Feature*>();
+	vector<Feature*>* storage = new vector<Feature*>();
 	srand(time(NULL));
 	for(int i=0; i<num_features; ++i)
 	{
@@ -171,7 +171,7 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 		
 		if(!IsValidFeature(new_creation)) { return NULL; }
 		
-		storage->insert(new_creation);
+		storage->push_back(new_creation);
 	}
 	return storage;
 }

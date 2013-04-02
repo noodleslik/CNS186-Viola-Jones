@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O2 `pkg-config --cflags opencv` -Wall
+CFLAGS=-O2 `pkg-config --cflags opencv` -Wall -fopenmp
 LIBS=`pkg-config --libs opencv`
 
 all: adaboost_main conv mshcd

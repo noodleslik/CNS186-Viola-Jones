@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <omp.h>
 
 using namespace std;
 using namespace cv;
@@ -28,10 +29,10 @@ const char* const base_negative = "../Negative_Dataset/";
 const char* const extension = ".jpg";
 const char* const extension2 = ".jpg";
 
-int LoadImage(unsigned int which_faces, unsigned int which_not_faces, 
-              vector<Mat> &pos_iis, vector<Mat> &neg_iis)
+size_t LoadImage(unsigned int which_faces, unsigned int which_not_faces, 
+                 vector<Mat> &pos_iis, vector<Mat> &neg_iis)
 {
-	unsigned int i, num_skipped = 0;
+	size_t i, num_skipped = 0;
 	Mat img_placeholder;
 	// Get integral image of each POSITIVE sample
 	for(i=0; i < which_faces; ++i)
@@ -74,7 +75,7 @@ int LoadImage(unsigned int which_faces, unsigned int which_not_faces,
 vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int which_not_faces,
                                      unsigned int how_many, unsigned int total_set)
 {
-	unsigned int i;
+	size_t i;
 	vector<AdaBoostFeature*> container;
 	// Generate integral images.
 	vector<Mat> pos_iis;        // 正样本积分图
@@ -82,7 +83,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	vector<Mat> neg_iis;        // 负样本积分图
 	vector<double> neg_weights; // 负样本权重
 
-	int num_skipped;
+	size_t num_skipped;
 	num_skipped = LoadImage(which_faces, which_not_faces, pos_iis, neg_iis);
 	cout << "All images are loaded. " << num_skipped << " images skipped." << endl;
 
@@ -100,7 +101,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	}
 	
 	// Generate random features. 产生随机特征
-	set<Feature*>* feature_set;
+	vector<Feature*>* feature_set;
 	if(total_set)
 		feature_set = GenerateRandomFeatures(total_set);
 	else
@@ -118,7 +119,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 		if(best_feature)
 		{
 			container.push_back(best_feature);
-			feature_set->erase(best_feature->feature);
+			feature_set->erase(feature_set->begin() + best_feature->feature_id);
 		}
 		else
 		{
@@ -135,7 +136,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
                                   vector<double> &pos_weights, vector<double> &neg_weights,
-                                  set<Feature*> *feature_set)
+                                  vector<Feature*> *feature_set)
 {
 	/** Step 1. Normalize the weights 归一化权重，所有正负样本 */
 	cout << "Normalizing Weights..." << endl;
@@ -160,27 +161,27 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	double best_error, cur_error;
 	Feature* best_feature = NULL;
 	best_error = numeric_limits<double>::infinity();// init best error infinit
-	set<Feature*>::const_iterator feature_it;
 	vector<Mat>::const_iterator im_it;
 	vector<int> positive_results; // feature value of positive sample 
 	vector<int> negative_results; // feature value of negative sample
-	int which_feature = 0;
+	size_t best_feature_i = 0, which_feature = 0;
 	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
 	// for each random feature, find a *single* best feature
-	for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it)
+	size_t total_features = feature_set->size();
+	//#pragma omp parallel for
+	for(which_feature = 0; which_feature < total_features; which_feature++)
 	{
 		if(which_feature % 1000 == 0)
 			cout << "Calculating feature " << which_feature << endl;
-		which_feature++;
 		
 		positive_results.clear();
 		negative_results.clear();
 		// calcualte feature's value of each positive sample
 		for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it)
-			positive_results.push_back(CalculateFeature(*feature_it, *im_it));
+			positive_results.push_back(CalculateFeature(feature_set->at(which_feature), *im_it));
 		// calcualte feature's value of each negative sample
 		for(im_it = neg_iis.begin(); im_it != neg_iis.end(); ++im_it)
-			negative_results.push_back(CalculateFeature(*feature_it, *im_it));
+			negative_results.push_back(CalculateFeature(feature_set->at(which_feature), *im_it));
 		
 		// 找出当前弱分类器的阈值，极性和错误率。
 		FindThresholdAndPolarity(positive_results, negative_results,
@@ -193,8 +194,8 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 			best_error = cur_error;
 			best_threshold = cur_threshold;
 			best_polarity = cur_polarity;
-			
-			best_feature = *feature_it;
+			best_feature = feature_set->at(which_feature);
+			best_feature_i = which_feature;
 		}
 	}
 	// 错误率大于0.5则舍弃
@@ -214,7 +215,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	for(im_it = neg_iis.begin(); im_it != neg_iis.end(); ++im_it)
 		negative_results.push_back(CalculateFeature(best_feature, *im_it));
 	// 更新正/负样本权重
-	unsigned int i;
+	size_t i;
 	double beta = (best_error)/(1 - best_error);
 	cout << "Use beta = " << beta << " to reduce weight." <<endl;
 	// use beta to update weights of each Positive and Negative feature
@@ -237,6 +238,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	/** Return best feature */
 	AdaBoostFeature* result = new AdaBoostFeature();
 	result->feature = best_feature;
+	result->feature_id = best_feature_i;
 	result->threshold = best_threshold;
 	result->polarity = best_polarity;
 	result->beta_t = beta;

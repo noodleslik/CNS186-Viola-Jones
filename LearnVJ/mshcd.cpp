@@ -7,14 +7,19 @@
 #include <iostream>
 using namespace std;
 
-int main()
+int main(int argc, const char* argv[])
 {
 	MSHCD mshcd;
+	if(argc < 3)
+	{
+		printf("Usage: %s image cascadedata\n", argv[0]);
+		return -1;
+	}
 #ifndef WITH_OPENCV
-	mshcd.Run("gray_img.raw", "billabingbong.txt");
+	mshcd.Run(argv[1], argv[2]);
 #else
-	mshcd.Run("gray_img.jpg", "billabingbong.txt");
-	mshcd.ShowDetectionResult("gray_img.jpg");
+	mshcd.Run(argv[1], argv[2]);
+	mshcd.ShowDetectionResult(argv[1]);
 #endif
 	return 0;
 }
@@ -23,71 +28,78 @@ u32 MSHCD::GetHaarCascade(const char* filename, vector<Stage>& Stages)
 {
 	ifstream fin;
 	fin.open(filename);
-	u32 t, trees, type, x1, y1, x2, y2;// UL, LR points of rectangle1
+	u32 s, t, trees, type, x1, y1, x2, y2;// UL, LR points of rectangle1
 	int polarity, size;
 	double threshold, beta_t, stage_threshold;
 	fin>>size>>trees;
-	// Assume we have only 1 stage
-	t = 1;
-	Stage stage;
-	stage_threshold = 0;
-	while(!fin.eof() && t<=trees)
+	// Convert 1 stage to multi stages
+	s = 0;
+	const u32 stage_size[] = {10, 20, 30, 50, 80, 130, 210, 340, 550, 890, 1440, 2330};
+	while(!fin.eof() && stage_size[s]<trees)
 	{
-		Tree tree;
-		fin>>type>>x1>>y1>>x2>>y2;
-		fin>>threshold>>polarity>>beta_t;
-		/*cout<<type<<"["<<x1<<", "<<y1<<"]["<<x2<<", "<<y2<<"] "
-			<<threshold<<" "<<polarity<<" "<<beta_t<<endl;*/
-		// two or three rects
-		u32 w = x2 - x1;
-		u32 h = y2 - y1;
-		if(type == TWO_REC_HORIZ)
+		t = 1;
+		Stage stage;
+		stage_threshold = 0;
+		while(!fin.eof() && t<=stage_size[s])
 		{
-			tree.nb_rects = 2;
-			tree.rects[0] = Rectangle(x1, y1, w, h, 1);
-			tree.rects[1] = Rectangle(x2, y1, w, h, -1);
+			Tree tree;
+			fin>>type>>x1>>y1>>x2>>y2;
+			fin>>threshold>>polarity>>beta_t;
+			/*printf("%d [%d,%d] [%d,%d] %lf %d %lf\n",
+					type, x1, y1, x2, y2, threshold, polarity, beta_t); */
+			u32 w = x2 - x1;
+			u32 h = y2 - y1;
+			if(type == TWO_REC_HORIZ)
+			{
+				tree.nb_rects = 2;
+				tree.rects[0] = Rectangle(x1, y1, w, h, 1);
+				tree.rects[1] = Rectangle(x2, y1, w, h, -1);
+			}
+			else if(type == TWO_REC_VERT)
+			{
+				tree.nb_rects = 2;
+				tree.rects[0] = Rectangle(x1, y1, w, h, 1);
+				tree.rects[1] = Rectangle(x1, y2, w, h, -1);
+			}
+			else if(type == THREE_REC_HORIZ)
+			{
+				tree.nb_rects = 2;
+				tree.rects[0] = Rectangle(x1, y1, 3*w, h, 1);
+				tree.rects[1] = Rectangle(x2, y1,   w, h, -2);
+			}
+			else if(type == THREE_REC_VERT)
+			{
+				tree.nb_rects = 2;
+				tree.rects[0] = Rectangle(x1, y1, w, 3*h, 1);
+				tree.rects[1] = Rectangle(x1, y2, w,   h, -2);
+			}
+			else if(type == FOUR_REC)
+			{
+				tree.nb_rects = 3;
+				tree.rects[0] = Rectangle(x1, y1, 2*w, 2*h, 1);
+				tree.rects[1] = Rectangle(x2, y1,   w,   h, -2);
+				tree.rects[2] = Rectangle(x1, y2,   w,   h, -2);
+			}
+			else
+			{
+				printf("Type error\n");
+				return -1;
+			}
+			tree.tilted = 0;
+			tree.threshold = threshold/1/1;
+			tree.polarity = polarity;
+			tree.alpha = log(1./beta_t);
+			
+			stage_threshold += tree.alpha;		
+			stage.trees.push_back(tree);
+			t++;
 		}
-		else if(type == TWO_REC_VERT)
-		{
-			tree.nb_rects = 2;
-			tree.rects[0] = Rectangle(x1, y1, w, h, 1);
-			tree.rects[1] = Rectangle(x1, y2, w, h, -1);
-		}
-		else if(type == THREE_REC_HORIZ)
-		{
-			tree.nb_rects = 2;
-			tree.rects[0] = Rectangle(x1, y1, 3*w, h, 1);
-			tree.rects[1] = Rectangle(x2, y1,   w, h, -2);
-		}
-		else if(type == THREE_REC_VERT)
-		{
-			tree.nb_rects = 2;
-			tree.rects[0] = Rectangle(x1, y1, w, 3*h, 1);
-			tree.rects[1] = Rectangle(x1, y2, w,   h, -2);
-		}
-		else if(type == FOUR_REC)
-		{
-			tree.nb_rects = 3;
-			tree.rects[0] = Rectangle(x1, y1, 2*w, 2*h, 1);
-			tree.rects[1] = Rectangle(x2, y1,   w,   h, -2);
-			tree.rects[2] = Rectangle(x1, y2,   w,   h, -2);
-		}
-		else
-		{
-			cout<<"Type error"<<endl;
-			return -1;
-		}
-		tree.tilted = 0;
-		tree.threshold = threshold/1/1;
-		tree.polarity = polarity;
-		
-		tree.alpha = log(1./beta_t);
-		stage_threshold += tree.alpha;		
-		stage.trees.push_back(tree);
-		t++;
+		trees -= stage.trees.size();
+		stage.threshold = stage_threshold/2;
+		printf("Stage %d num features %d threshold %lf\n", s, stage.trees.size(), stage.threshold);
+		Stages.push_back(stage);
+		s++;
 	}
-	stage.threshold = stage_threshold/2;
-	Stages.push_back(stage);
 	return size;
 }
 
@@ -97,7 +109,7 @@ void MSHCD::Run(const char* imagefile, const char* haarcasadefile)
 	assert(sizeof(u16) == 2);
 	assert(sizeof(u32) == 4);
 	assert(sizeof(u64) == 8);
-	haarcascade.ScaleUpdate = 1.0/1.3;
+	haarcascade.ScaleUpdate = 1.0/1.35;
 	haarcascade.size1 = haarcascade.size2 =
 	GetHaarCascade(haarcasadefile, haarcascade.stages); // get classifer from file
 	GetIntergralImages(imagefile);  // calculate integral image

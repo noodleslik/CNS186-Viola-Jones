@@ -32,7 +32,7 @@ struct Feature
 	}
 };
 
-bool operator< (const Feature& left, const Feature& right);
+//bool operator< (const Feature& left, const Feature& right);
 
 // Valid features require that:
 //   - x1 < x2
@@ -40,11 +40,11 @@ bool operator< (const Feature& left, const Feature& right);
 //   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);
 
-set<Feature*>* GenerateAllFeatures(int step);
+vector<Feature*>* GenerateAllFeatures(int step);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.
-set<Feature*>* GenerateRandomFeatures(int num_features);
+vector<Feature*>* GenerateRandomFeatures(int num_features);
 
 // Calculates a feature given the IntegralImage
 int CalculateFeature(Feature* feature, Mat integral_image);
