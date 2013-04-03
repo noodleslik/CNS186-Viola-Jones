@@ -37,7 +37,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 // Given a set of positive and negative values of a particular feature,Puts the best
 // threshold and polarity as well as total error based on weightings into the given vars
 void FindThresholdAndPolarity(const vector<int> &positive_examples, const vector<int> &negative_examples,
-                              vector<double> &pos_weights, vector<double> &neg_weights,
+                              const vector<double> &pos_weights, const vector<double> &neg_weights,
                               int* threshold, int* polarity, double* error);
 
 void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename); 

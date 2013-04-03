@@ -127,8 +127,11 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 			break;
 		}
 		minutes = double(clock()-start)/CLOCKS_PER_SEC/60;
-		cout<<"Using "<<minutes<<" minutes."<<endl;
-		cout<<minutes*(how_many-i)<<" minutes Remained"<<endl;
+		cout<<"Use "<<minutes<<" minutes."<<endl;
+		minutes *= how_many-i;
+		if(minutes > 60)
+			cout<<(long)(minutes / 60)<<" hours ";
+		cout<<(long)(minutes) % 60<<" minutes Remaining..."<<endl;
 	}
 
 	return container;
@@ -249,7 +252,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 // Try every example value as the threshold. This is WLOG.
 // 找出某个弱分类器的阈值，极性和错误率。
 void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<int> &negative_results, 
-                              vector<double> &pos_weights, vector<double> &neg_weights,
+                              const vector<double> &pos_weights, const vector<double> &neg_weights,
                               int* threshold, int* polarity, double* error)
 {
 	unsigned int i, its, total_samples;
