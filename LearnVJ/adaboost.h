@@ -19,8 +19,6 @@ struct AdaBoostFeature
 	size_t feature_id;
 };
 
-//bool operator< (const AdaBoostFeature& left, const AdaBoostFeature& right); 
-
 // Runs the overall adaboost algorithm
 // which_faces is the last face in the training set
 // which_not_faces is the last face in the negative training set

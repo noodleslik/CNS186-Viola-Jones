@@ -24,7 +24,8 @@ int main(int argc, const char* argv[])
 		sprintf(filename, "nonface%04d.bmp", i);
 		strcat(path, filename);
 		printf("%s\n", path);
-		Mat orig = imread(path, 0);
+		Mat orig;
+		orig = imread(path, 0);
 		Mat adp;
 		equalizeHist(orig, adp);
 		Mat dst;
@@ -37,3 +38,4 @@ int main(int argc, const char* argv[])
 		imwrite(path, dst);
 	}
 }
+

@@ -139,7 +139,8 @@ void MSHCD::GetIntergralImages(const char* imagefile)
 	fread(image.data, size*sizeof(u8), 1, fin);
 	fclose(fin);
 #else
-	cv::Mat img = cv::imread(imagefile, 0);
+	cv::Mat img;
+	img = cv::imread(imagefile, 0);
 	image.width = img.cols;
 	image.height = img.rows;
 	printf("%d X %d\n", image.width, image.height);

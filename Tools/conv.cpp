@@ -32,12 +32,13 @@ int main(int argc, const char* argv[])
 		pt2.x = x1;
 		pt2.y = y1;
 		strcat(path, temp);
-		Mat image = imread(path, 0);
-		Mat roi(image, Rect(pt1, pt2));
+		Mat image;
+		image = imread(path, 0);
 		Mat adp;
-		equalizeHist(roi, adp);
+		equalizeHist(image, adp);
+		Mat roi(adp, Rect(pt1, pt2));
 		Mat dst;
-		resize(adp, dst, Size(SIZE, SIZE), 0, 0);
+		resize(roi, dst, Size(SIZE, SIZE), 0, 0);
 		strcpy(path, "../Faces_Normalized/");
 		strcat(path, filename);
 		imwrite(path, dst);
@@ -50,3 +51,4 @@ int main(int argc, const char* argv[])
 	}
 	return 0;
 }
+

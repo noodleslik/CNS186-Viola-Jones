@@ -32,8 +32,6 @@ struct Feature
 	}
 };
 
-//bool operator< (const Feature& left, const Feature& right);
-
 // Valid features require that:
 //   - x1 < x2
 //   - y1 < y2
