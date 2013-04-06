@@ -86,7 +86,7 @@ u32 MSHCD::GetHaarCascade(const char* filename, vector<Stage>& Stages)
 				return -1;
 			}
 			tree.tilted = 0;
-			tree.threshold = threshold/1/1;
+			tree.threshold = threshold/(size*size);
 			tree.polarity = polarity;
 			tree.alpha = log(1./beta_t);
 			
@@ -109,7 +109,7 @@ void MSHCD::Run(const char* imagefile, const char* haarcasadefile)
 	assert(sizeof(u16) == 2);
 	assert(sizeof(u32) == 4);
 	assert(sizeof(u64) == 8);
-	haarcascade.ScaleUpdate = 1.0/1.35;
+	haarcascade.ScaleUpdate = 1.0/1.2;
 	haarcascade.size1 = haarcascade.size2 =
 	GetHaarCascade(haarcasadefile, haarcascade.stages); // get classifer from file
 	GetIntergralImages(imagefile);  // calculate integral image
@@ -222,7 +222,7 @@ void MSHCD::HaarCasadeObjectDetection()
 					edges_density = image(CANNY,x+width,y+height)+image(CANNY,x,y)-
 									image(CANNY,x,y+height)-image(CANNY,x+width,y);
 					d = edges_density/(width*height);
-					if( d<20 || d>100 )
+					if( d<15 || d>100 )
 						continue;
 				}
 				OneScaleObjectDetection(Point(x,y), Scale, width, height);
@@ -312,8 +312,8 @@ double MSHCD::TreeObjectDetection(Tree& tree, double Scale, Point& point,
 		Rectangle_sum += (image(II1, rx2, ry2) + image(II1, rx1, ry1)
 						- image(II1, rx2, ry1) - image(II1, rx1, ry2)) * rect.weight;
 	}
-	Rectangle_sum *= 1;
-	if(Rectangle_sum*tree.polarity < tree.threshold*vnorm*tree.polarity)
+	Rectangle_sum *= InverseArea;
+	if(Rectangle_sum*tree.polarity < tree.threshold*1*tree.polarity/Scale/Scale)
 		return tree.alpha;
 	else
 		return 0;
