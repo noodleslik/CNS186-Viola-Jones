@@ -13,7 +13,7 @@ using namespace cv;
  * (such as checking validity or generating random sets of them).
  */
 
-const int SUBWINDOW_SIZE = 25;
+const int SUBWINDOW_SIZE = 24;
 
 struct Feature
 {
@@ -38,11 +38,11 @@ struct Feature
 //   - Rectangles don't come off screen
 bool IsValidFeature(Feature* to_check);
 
-vector<Feature*>* GenerateAllFeatures(int step);
+set<Feature*>* GenerateAllFeatures(int step);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.
-vector<Feature*>* GenerateRandomFeatures(int num_features);
+set<Feature*>* GenerateRandomFeatures(int num_features);
 
 // Calculates a feature given the IntegralImage
 int CalculateFeature(Feature* feature, Mat integral_image);

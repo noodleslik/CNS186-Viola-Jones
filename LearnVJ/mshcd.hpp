@@ -28,6 +28,7 @@ typedef struct Rectangle
 typedef struct Tree
 {
 	Rectangle rects[3];
+	u32 size;
 	u32 tilted;
 	u32 nb_rects;
 	int polarity;

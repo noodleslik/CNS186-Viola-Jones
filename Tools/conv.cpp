@@ -34,9 +34,7 @@ int main(int argc, const char* argv[])
 		strcat(path, temp);
 		Mat image;
 		image = imread(path, 0);
-		Mat adp;
-		equalizeHist(image, adp);
-		Mat roi(adp, Rect(pt1, pt2));
+		Mat roi(image, Rect(pt1, pt2));
 		Mat dst;
 		resize(roi, dst, Size(SIZE, SIZE), 0, 0);
 		strcpy(path, "../Faces_Normalized/");
@@ -44,7 +42,6 @@ int main(int argc, const char* argv[])
 		imwrite(path, dst);
 	#if 0
 		rectangle(image, pt1, pt2, scalar, 2, 8, 0);
-		imshow("Image", adp);
 		imshow("Image", dst);
 		waitKey();
 	#endif

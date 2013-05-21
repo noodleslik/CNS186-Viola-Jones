@@ -1,7 +1,9 @@
 #!/bin/bash
 
-data="./1000.txt"
+data="./2000.txt"
 image_path="../WebFaces"
+
+
 image_list=`ls $image_path`
 
 

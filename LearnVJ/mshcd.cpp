@@ -51,30 +51,35 @@ u32 MSHCD::GetHaarCascade(const char* filename, vector<Stage>& Stages)
 			u32 h = y2 - y1;
 			if(type == TWO_REC_HORIZ)
 			{
+				tree.size = 2 * w * h;
 				tree.nb_rects = 2;
 				tree.rects[0] = Rectangle(x1, y1, w, h, 1);
 				tree.rects[1] = Rectangle(x2, y1, w, h, -1);
 			}
 			else if(type == TWO_REC_VERT)
 			{
+				tree.size = 2 * w * h;
 				tree.nb_rects = 2;
 				tree.rects[0] = Rectangle(x1, y1, w, h, 1);
 				tree.rects[1] = Rectangle(x1, y2, w, h, -1);
 			}
 			else if(type == THREE_REC_HORIZ)
 			{
+				tree.size = 3 * w * h;
 				tree.nb_rects = 2;
 				tree.rects[0] = Rectangle(x1, y1, 3*w, h, 1);
 				tree.rects[1] = Rectangle(x2, y1,   w, h, -2);
 			}
 			else if(type == THREE_REC_VERT)
 			{
+				tree.size = 3 * w * h;
 				tree.nb_rects = 2;
 				tree.rects[0] = Rectangle(x1, y1, w, 3*h, 1);
 				tree.rects[1] = Rectangle(x1, y2, w,   h, -2);
 			}
 			else if(type == FOUR_REC)
 			{
+				tree.size = 4 * w * h;
 				tree.nb_rects = 3;
 				tree.rects[0] = Rectangle(x1, y1, 2*w, 2*h, 1);
 				tree.rects[1] = Rectangle(x2, y1,   w,   h, -2);
@@ -86,7 +91,7 @@ u32 MSHCD::GetHaarCascade(const char* filename, vector<Stage>& Stages)
 				return -1;
 			}
 			tree.tilted = 0;
-			tree.threshold = threshold/(size*size);
+			tree.threshold = threshold;
 			tree.polarity = polarity;
 			tree.alpha = log(1./beta_t);
 			
@@ -313,7 +318,8 @@ double MSHCD::TreeObjectDetection(Tree& tree, double Scale, Point& point,
 						- image(II1, rx2, ry1) - image(II1, rx1, ry2)) * rect.weight;
 	}
 	Rectangle_sum *= InverseArea;
-	if(Rectangle_sum*tree.polarity < tree.threshold*1*tree.polarity/Scale/Scale)
+	//printf("%lf %lf\n", Rectangle_sum , tree.threshold*Scale*Scale);
+	if(Rectangle_sum*tree.polarity < tree.threshold*vnorm*tree.polarity)
 		return tree.alpha;
 	else
 		return 0;

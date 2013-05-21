@@ -13,7 +13,7 @@ int main(int argc, const char* argv[])
 	Point pt1, pt2;
 	if(argc<2)
 	{
-		// ./conv ../24/BMP/nonfaces/
+		// ./resize ../24/BMP/nonfaces/
 		printf("Usage: ./resize image_dir\n");
 		return -1;
 	}
@@ -26,10 +26,8 @@ int main(int argc, const char* argv[])
 		printf("%s\n", path);
 		Mat orig;
 		orig = imread(path, 0);
-		Mat adp;
-		equalizeHist(orig, adp);
 		Mat dst;
-		resize(adp, dst, Size(SIZE, SIZE), 0, 0);
+		resize(orig, dst, Size(SIZE, SIZE), 0, 0);
 	#if 0
 		imshow("Image", dst);
 		waitKey();
