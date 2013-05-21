@@ -18,7 +18,7 @@ int main()
 	unsigned int s, t, trees;
 	unsigned int type, x1, y1, x2, y2;// UL, LR points of rectangle1
 	int polarity, size;
-	double threshold, beta_t, stage_threshold;
+	double threshold, beta_t, false_pos_rate, stage_threshold;
 	s = 1; t = 1;
 	stage_threshold = 0;
 	fin>>size>>trees;
@@ -27,10 +27,11 @@ int main()
 	// Assume we have only 1 stage
 	while(!fin.eof() && t<=trees)
 	{
-		fin>>type>>x1>>y1>>x2>>y2;
-		fin>>threshold>>polarity>>beta_t;
-		cout<<type<<"["<<x1<<", "<<y1<<"]["<<x2<<", "<<y2<<"] ";
-		cout<<threshold<<" "<<polarity<<" "<<beta_t<<endl;
+		fin >> type >> x1 >> y1 >> x2 >> y2;
+		fin >> threshold >> polarity >> beta_t >> false_pos_rate;
+		cout<<type<<"["<<x1<<", "<<y1<<"]["<<x2<<", "<<y2<<"] "
+			<<threshold<<" "<<polarity<<" "<<beta_t<<" "
+			<<false_pos_rate<<endl;
 		// two or three rects
 		unsigned int w = x2 - x1;
 		unsigned int h = y2 - y1;
