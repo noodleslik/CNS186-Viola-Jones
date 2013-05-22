@@ -32,12 +32,6 @@ struct Feature
 	}
 };
 
-// Valid features require that:
-//   - x1 < x2
-//   - y1 < y2
-//   - Rectangles don't come off screen
-bool IsValidFeature(Feature* to_check);
-
 set<Feature*>* GenerateAllFeatures(int step);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
@@ -45,7 +39,7 @@ set<Feature*>* GenerateAllFeatures(int step);
 set<Feature*>* GenerateRandomFeatures(int num_features);
 
 // Calculates a feature given the IntegralImage
-int CalculateFeature(Feature* feature, Mat integral_image);
+int CalculateFeature(Feature* feature, const Mat& integral_image);
 
 #endif
 

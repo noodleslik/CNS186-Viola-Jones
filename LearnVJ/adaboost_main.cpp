@@ -5,6 +5,7 @@ using namespace std;
 
 int main(int argc, const char* argv[])
 {
+	vector<AdaBoostFeature*> first_set;
 	const char* const filename1 = "billabingbong.txt";
 	if(argc < 5)
 	{
@@ -16,8 +17,7 @@ int main(int argc, const char* argv[])
 	unsigned int n_neg = atoi(argv[2]); // 2000
 	unsigned int how_many = atoi(argv[3]); // 20
 	unsigned int n_random = atoi(argv[4]); // 5000
-	vector<AdaBoostFeature*> first_set = \
-		RunAdaBoost(n_pos, n_neg, how_many, n_random);
+	first_set = RunAdaBoost(n_pos, n_neg, how_many, n_random);
 	SaveAdaBoost(first_set, filename1);
 	return 0;
 }

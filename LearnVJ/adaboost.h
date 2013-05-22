@@ -1,7 +1,7 @@
 #ifndef LEARNVJ_ADABOOST_H
 #define LEARNVJ_ADABOOST_H
 
-#include "cv.h"
+#include <opencv2/opencv.hpp>
 #include <set>
 
 using namespace cv;

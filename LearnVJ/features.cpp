@@ -8,7 +8,7 @@ using namespace std;
 using namespace cv;
 
 // Requirements are listed in the header file.
-bool IsValidFeature(Feature* to_check)
+static bool IsValidFeature(Feature* to_check)
 {
 	if(to_check->x1 > to_check->x2) { return false; }
 	if(to_check->y1 > to_check->y2) { return false; }
@@ -158,7 +158,7 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 }
 
 // Calculate Feature weight
-int CalculateFeature(Feature* feature, Mat integral_image)
+int CalculateFeature(Feature* feature, const Mat& integral_image)
 {
 	double current_sum = 0;
 	if(!IsValidFeature(feature)) { return -1; }

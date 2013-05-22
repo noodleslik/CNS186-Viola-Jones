@@ -8,10 +8,12 @@ using namespace std;
 /**
  * Convert train result's format
  */
-int main()
+int main(int argc, char *argv[])
 {
+	if(argc < 2)
+		return 1;
 	ifstream fin;
-	fin.open("billabingbong.txt");
+	fin.open(argv[1]);
 	ofstream fout;
 	fout.open("trees.txt");
 	
