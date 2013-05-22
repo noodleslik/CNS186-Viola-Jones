@@ -30,14 +30,14 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 	int img_height = orig.rows;
 	while(img_width > SUBWINDOW_SIZE && img_height > SUBWINDOW_SIZE)
 	{
-		int found;
+		int x, y, found;
 		Mat img, iimg;
 		resize(orig, img, Size(img_width, img_height));
 		iimg = IntegralImage(img);
 		found = 0;
-		for(int x = 1; x < img_width - SUBWINDOW_SIZE; x++)
+		for(x = 1; x < img_width - SUBWINDOW_SIZE; x++)
 		{
-			for(int y = 1; y < img_height - SUBWINDOW_SIZE; y++)
+			for(y = 1; y < img_height - SUBWINDOW_SIZE; y++)
 			{
 				double stage_sum = 0;
 				double stage_threshold = 0;
@@ -51,19 +51,20 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 					threshold = afeatures[fi]->threshold;
 					feature.type = afeatures[fi]->feature->type;
 					feature.x1 = afeatures[fi]->feature->x1 + x;
-					feature.x2 = afeatures[fi]->feature->x2 + x;
 					feature.y1 = afeatures[fi]->feature->y1 + y;
+					feature.x2 = afeatures[fi]->feature->x2 + x;
 					feature.y2 = afeatures[fi]->feature->y2 + y;
 					feature_val = CalculateFeature(&feature, iimg);
 					if(feature_val * polarity < threshold * polarity)
 						stage_sum += alpha;
 					stage_threshold += alpha;
 				}
-				if(stage_sum >= 0.5*stage_threshold)// pass the stage
+				if(stage_sum >= 0.6*stage_threshold)// pass the stage
 				{
 					Point pt1, pt2;
-					Scalar scalar(0, 0, 0, 0);
+					Scalar scalar(255, 255, 0, 0);
 					found++;
+					printf("(%d,%d)", x, y);
 					pt1.x = x; pt2.x = x + SUBWINDOW_SIZE;
 					pt1.y = y; pt2.y = y + SUBWINDOW_SIZE;
 					rectangle(img, pt1, pt2, scalar);
@@ -72,7 +73,7 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 		}
 		if(found)
 		{
-			printf("Found %d at %d x %d\n", found, img_width, img_height);
+			printf("\nFound %d at %d x %d\n", found, img_width, img_height);
 			imshow("Image", img);
 			waitKey();
 		}

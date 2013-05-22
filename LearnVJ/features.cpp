@@ -7,7 +7,7 @@
 using namespace std;
 using namespace cv;
 
-// Requirements are listed in the header file.
+// Check whether the feature fit into SUBWINDOW_SIZE*SUBWINDOW_SIZE
 static bool IsValidFeature(Feature* to_check)
 {
 	if(to_check->x1 > to_check->x2) { return false; }
@@ -161,7 +161,6 @@ set<Feature*>* GenerateRandomFeatures(int num_features)
 int CalculateFeature(Feature* feature, const Mat& integral_image)
 {
 	double current_sum = 0;
-	if(!IsValidFeature(feature)) { return -1; }
 	// First rectangle is the same for all.
 	current_sum += integral_image.at<double>(feature->y1, feature->x1) + 
 				   integral_image.at<double>(feature->y2, feature->x2) -

@@ -176,7 +176,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 		                         &cur_threshold, &cur_polarity,
 		                         &cur_error, &cur_false_pos_rate);
 		// update best error 找到最小迭代误差之和的样本
-		if(cur_error < best_error && cur_false_pos_rate < best_false_pos_rate)
+		if(cur_false_pos_rate < 0.1 && cur_error < best_error)
 		{
 			best_error = cur_error;
 			best_threshold = cur_threshold;

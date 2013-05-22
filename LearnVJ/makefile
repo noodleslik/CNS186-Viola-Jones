@@ -29,5 +29,5 @@ verify: verify.o features.o ../IntegralImage/integral_image.o
 	$(CC) $+ $(LIBS) $(CFLAGS) -o $@
 
 clean:
-	rm -rf *.o adaboost_main conv
+	rm -rf *.o adaboost_main conv verify
 
