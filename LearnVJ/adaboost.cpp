@@ -72,7 +72,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 
 	size_t num_skipped;
 	num_skipped = LoadImage(which_faces, which_not_faces, pos_iis, neg_iis);
-	cout << "All images are loaded. " << num_skipped << " images skipped." << endl;
+	cout << "Images are loaded. " << num_skipped << " skipped." << endl;
 
 	// 初始化正样本权重
 	// Initial weights of each POSITIVE sample  =  1/(2*n)
@@ -114,11 +114,11 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 			break;
 		}
 		minutes = double(clock()-start)/CLOCKS_PER_SEC/60;
-		cout << minutes << " minutes." << endl;
+		cout << minutes << " mins. ";
 		minutes *= how_many - i;
 		if(minutes > 60)
 			cout << (long)(minutes / 60) << " hours ";
-		cout << (long)(minutes) % 60 << " minutes Remaining..." << endl;
+		cout << (long)(minutes) % 60 << " mins remaining..." << endl;
 	}
 
 	return container;
@@ -176,7 +176,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 		                         &cur_threshold, &cur_polarity,
 		                         &cur_error, &cur_false_pos_rate);
 		// update best error 找到最小迭代误差之和的样本
-		if(cur_false_pos_rate < 0.1 && cur_error < best_error)
+		if(cur_error < best_error)
 		{
 			best_error = cur_error;
 			best_threshold = cur_threshold;
@@ -188,11 +188,11 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	// 错误率大于0.5则舍弃
 	if(best_error > 0.5)
 		return NULL;
-	cout << "Error rate " << best_error << endl;
+	cout << "Weighted error rate " << best_error << endl;
 	cout << "False positive rate " << best_false_pos_rate << endl;
 	
 	/** Step 3. Update the weights */
-	cout << "Updating weights..." << endl;
+	cout << "Updating weights... ";
 	positive_results.clear();
 	negative_results.clear();
 	// 计算最佳错误率特征在正/负样本中的值
@@ -244,9 +244,9 @@ void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<
 	vector<int>::const_iterator it;
 	int best_threshold = 0;
 	int best_polarity = 0;
-	double pos_pol_sum, neg_pol_sum; // 迭代误差之和
+	double pos_pol_err_sum, neg_pol_err_sum;
 	double best_error;
-	double false_pos_sum, best_false_pos_sum; // 假阳性的数量
+	double false_pos_sum1, false_pos_sum2, best_false_pos_sum; // 假阳性数
 	// 初始化为无穷大
 	best_error = numeric_limits<double>::infinity();
 	best_false_pos_sum = numeric_limits<double>::infinity();
@@ -255,9 +255,8 @@ void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<
 	total_samples = positive_results.size() + negative_results.size();
 	for(its = 0; its < total_samples; its++)
 	{
-		pos_pol_sum = 0; // 作为*正*特征的加权错误率之和 S+
-		neg_pol_sum = 0; // 作为*负*特征的加权错误率之和 N+
-		false_pos_sum = 0;
+		pos_pol_err_sum = 0; // 作为*正*特征的加权错误率之和 S+
+		neg_pol_err_sum = 0; // 作为*负*特征的加权错误率之和 N+
 		int cur_threshold;
 		if(its < positive_results.size())
 			cur_threshold = positive_results[its]; // <= as a threshold
@@ -266,36 +265,39 @@ void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<
 		// 计算当前*样本权值*作为*阈值*的错误率
 		for(i=0; i < positive_results.size(); ++i) {
 			// Misclasified with polarity of 1
-			if(positive_results[i] >= cur_threshold) { 
-				pos_pol_sum += pos_weights.at(i);
+			if(!(positive_results[i]*1 < cur_threshold*1)) { 
+				pos_pol_err_sum += pos_weights.at(i);
 			}
 			// Misclassified with polarity of -1
-			if(positive_results[i] <= cur_threshold) {
-				neg_pol_sum += pos_weights.at(i);
+			if(!(positive_results[i]*-1 < cur_threshold*-1)) {
+				neg_pol_err_sum += pos_weights.at(i);
 			}
 		}
+		false_pos_sum1 = 0;
+		false_pos_sum2 = 0;
 		for(i=0; i < negative_results.size(); ++i) {
 			// Misclasified with polarity of 1
-			if(negative_results[i] < cur_threshold) { 
-				pos_pol_sum += neg_weights.at(i);
-				false_pos_sum++;
+			if(!(negative_results[i]*1 >= cur_threshold*1)) { 
+				pos_pol_err_sum += neg_weights.at(i);
+				false_pos_sum1++;
 			}
 			// Misclassified with polarity of -1
-			if(negative_results[i] > cur_threshold) {
-				neg_pol_sum += neg_weights.at(i);
+			if(!(negative_results[i]*-1 >= cur_threshold*-1)) {
+				neg_pol_err_sum += neg_weights.at(i);
+				false_pos_sum2++;
 			}
 		}
-		if(pos_pol_sum < best_error) {
+		if(pos_pol_err_sum < best_error) {
 			best_threshold = cur_threshold;
 			best_polarity = 1;
-			best_error = pos_pol_sum;
-			best_false_pos_sum = false_pos_sum;
+			best_error = pos_pol_err_sum;
+			best_false_pos_sum = false_pos_sum1;
 		}
-		if(neg_pol_sum < best_error) {
+		if(neg_pol_err_sum < best_error) {
 			best_threshold = cur_threshold;
 			best_polarity = -1; 
-			best_error = neg_pol_sum;
-			best_false_pos_sum = false_pos_sum;
+			best_error = neg_pol_err_sum;
+			best_false_pos_sum = false_pos_sum2;
 		}
 	}
 	*threshold = best_threshold;

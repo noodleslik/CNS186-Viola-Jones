@@ -59,7 +59,7 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 						stage_sum += alpha;
 					stage_threshold += alpha;
 				}
-				if(stage_sum >= 0.6*stage_threshold)// pass the stage
+				if(stage_sum >= 0.5*stage_threshold)// pass the stage
 				{
 					Point pt1, pt2;
 					Scalar scalar(255, 255, 0, 0);
