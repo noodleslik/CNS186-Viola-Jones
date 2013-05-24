@@ -6,20 +6,32 @@
 using namespace cv;
 using namespace std;
 
-void load_cascade(vector<AdaBoostFeature*>& first_set, const char *file);
-void verify(const vector<AdaBoostFeature*> &features, const char *imfile);
-
-int main(int argc, char *argv[])
+bool is_object(const vector<AdaBoostFeature*> &afeatures, Mat &iimg, int x, int y)
 {
-	if(argc < 3)
+	double stage_sum = 0;
+	double stage_threshold = 0;
+	for(size_t fi = 0; fi < afeatures.size(); fi++)
 	{
-		printf("Usage: %s image cascade\n", argv[0]);
-		return 1;
+		double alpha;
+		Feature feature;
+		int feature_val, polarity, threshold;
+		alpha = -log(afeatures[fi]->beta_t);
+		polarity = afeatures[fi]->polarity;
+		threshold = afeatures[fi]->threshold;
+		feature.type = afeatures[fi]->feature->type;
+		feature.x1 = afeatures[fi]->feature->x1 + x;
+		feature.y1 = afeatures[fi]->feature->y1 + y;
+		feature.x2 = afeatures[fi]->feature->x2 + x;
+		feature.y2 = afeatures[fi]->feature->y2 + y;
+		feature_val = CalculateFeature(&feature, iimg);
+		if(feature_val * polarity < threshold * polarity)
+			stage_sum += alpha;
+		stage_threshold += alpha;
 	}
-	vector<AdaBoostFeature*> first_set;
-	load_cascade(first_set, argv[2]);
-	verify(first_set, argv[1]);
-	return 0;
+	if(stage_sum >= 0.55*stage_threshold)// pass the stage
+		return true;
+	else
+		return false;
 }
 
 void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
@@ -28,7 +40,7 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 	orig = imread(imfile, 0);
 	int img_width = orig.cols;
 	int img_height = orig.rows;
-	while(img_width > SUBWINDOW_SIZE && img_height > SUBWINDOW_SIZE)
+	while(img_width > 3*SUBWINDOW_SIZE && img_height > 3*SUBWINDOW_SIZE)
 	{
 		int x, y, found;
 		Mat img, iimg;
@@ -39,27 +51,7 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 		{
 			for(y = 1; y < img_height - SUBWINDOW_SIZE; y++)
 			{
-				double stage_sum = 0;
-				double stage_threshold = 0;
-				for(size_t fi = 0; fi < afeatures.size(); fi++)
-				{
-					double alpha;
-					Feature feature;
-					int feature_val, polarity, threshold;
-					alpha = -log(afeatures[fi]->beta_t);
-					polarity = afeatures[fi]->polarity;
-					threshold = afeatures[fi]->threshold;
-					feature.type = afeatures[fi]->feature->type;
-					feature.x1 = afeatures[fi]->feature->x1 + x;
-					feature.y1 = afeatures[fi]->feature->y1 + y;
-					feature.x2 = afeatures[fi]->feature->x2 + x;
-					feature.y2 = afeatures[fi]->feature->y2 + y;
-					feature_val = CalculateFeature(&feature, iimg);
-					if(feature_val * polarity < threshold * polarity)
-						stage_sum += alpha;
-					stage_threshold += alpha;
-				}
-				if(stage_sum >= 0.5*stage_threshold)// pass the stage
+				if(is_object(afeatures, iimg, x, y))
 				{
 					Point pt1, pt2;
 					Scalar scalar(255, 255, 0, 0);

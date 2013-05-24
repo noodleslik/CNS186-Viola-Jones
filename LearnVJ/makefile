@@ -22,10 +22,13 @@ features.o: features.cpp features.h feature_type.h
 conv: conv.cpp
 	$(CC) $< $(LIBS) $(CFLAGS) -o $@
 
+verify_main.o: verify_main.cpp
+	$(CC) $(CFLAGS) -c $<
+
 verify.o: verify.cpp
 	$(CC) $(CFLAGS) -c $<
 
-verify: verify.o features.o ../IntegralImage/integral_image.o
+verify: verify_main.o verify.o features.o ../IntegralImage/integral_image.o
 	$(CC) $+ $(LIBS) $(CFLAGS) -o $@
 
 clean:
