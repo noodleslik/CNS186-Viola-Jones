@@ -2,7 +2,7 @@
 #include <cstdio>
 
 extern
-void load_cascade(vector<AdaBoostFeature*>& first_set, const char *file);
+void load_afeatures(vector<AdaBoostFeature*>& first_set, const char *file);
 extern
 void verify(const vector<AdaBoostFeature*> &features, const char *imfile);
 
@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	vector<AdaBoostFeature*> first_set;
-	load_cascade(first_set, argv[2]);
+	load_afeatures(first_set, argv[2]);
 	verify(first_set, argv[1]);
 	return 0;
 }

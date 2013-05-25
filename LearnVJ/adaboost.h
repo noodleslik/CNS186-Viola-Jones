@@ -18,10 +18,13 @@ struct AdaBoostFeature
 	double false_pos_rate;
 };
 
-// Runs the overall adaboost algorithm
-// which_faces is the last face in the training set
-// which_not_faces is the last face in the negative training set
-// how_many is the number of features to return, total_set is how many to randomly generate.
+size_t LoadImage(unsigned int which_faces, unsigned int which_not_faces, 
+                 vector<Mat> &pos_iis, vector<Mat> &neg_iis);
+
+// which_faces: size of positive training set
+// which_not_faces: size of negative training set
+// how_many: number of features to return
+// total_set: how many random feature to generate.
 vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int which_not_faces,
                                      unsigned int how_many, unsigned int total_set);
 

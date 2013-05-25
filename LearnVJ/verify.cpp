@@ -6,7 +6,7 @@
 using namespace cv;
 using namespace std;
 
-bool is_object(const vector<AdaBoostFeature*> &afeatures, Mat &iimg, int x, int y)
+bool is_object(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, int x, int y)
 {
 	double stage_sum = 0;
 	double stage_threshold = 0;
@@ -74,7 +74,7 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 	}
 }
 
-void load_cascade(vector<AdaBoostFeature*>& first_set, const char *file)
+void load_afeatures(vector<AdaBoostFeature*>& first_set, const char *file)
 {
 	AdaBoostFeature * afeature;
 	int size, count, num;
