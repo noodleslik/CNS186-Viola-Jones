@@ -28,10 +28,19 @@ bool is_object(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, int x
 			stage_sum += alpha;
 		stage_threshold += alpha;
 	}
-	if(stage_sum >= 0.55*stage_threshold)// pass the stage
+	if(stage_sum > 0.5*stage_threshold)// pass the stage
 		return true;
 	else
 		return false;
+}
+
+void verify(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, vector<Point> &pnts)
+{
+	vector<Point> points;
+	for(size_t i = 0; i < pnts.size(); ++i)
+		if(is_object(afeatures, iimg, pnts[i].x, pnts[i].y))
+			points.push_back(pnts[i]);
+	pnts = points;
 }
 
 void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
@@ -47,9 +56,9 @@ void verify(const vector<AdaBoostFeature*> &afeatures, const char * imfile)
 		resize(orig, img, Size(img_width, img_height));
 		iimg = IntegralImage(img);
 		found = 0;
-		for(x = 1; x < img_width - SUBWINDOW_SIZE; x++)
+		for(x = 0; x < img_width - SUBWINDOW_SIZE; x++)
 		{
-			for(y = 1; y < img_height - SUBWINDOW_SIZE; y++)
+			for(y = 0; y < img_height - SUBWINDOW_SIZE; y++)
 			{
 				if(is_object(afeatures, iimg, x, y))
 				{
@@ -80,8 +89,13 @@ void load_afeatures(vector<AdaBoostFeature*>& first_set, const char *file)
 	int size, count, num;
 	ifstream fin;
 	fin.open(file);
+	if(!fin.is_open())
+	{
+		printf("load_afeatures(): %s open error!\n", file);
+		return;
+	}
 	fin >> size >> count;
-	printf("size %d\n", size);
+	printf("size %d, ", size);
 	num = 0;
 	first_set.clear();
 	while(!fin.eof() && num < count)

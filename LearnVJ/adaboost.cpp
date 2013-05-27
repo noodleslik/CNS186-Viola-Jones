@@ -19,14 +19,14 @@ const char* const base_negative = "../24/nonfaces/";
 const char* const extension = ".bmp";
 const char* const extension2 = ".bmp";
 
-size_t LoadImage(unsigned int which_faces, unsigned int which_not_faces, 
+size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs, 
                  vector<Mat> &pos_iis, vector<Mat> &neg_iis)
 {
 	char buffer[64], buffer2[128];
 	size_t i, num_skipped = 0;
 	Mat img_placeholder;
 	// Get integral image of each POSITIVE sample
-	for(i=0; i < which_faces; ++i)
+	for(i=0; i < which_objs; ++i)
 	{
 		sprintf(buffer, "face%04d", i+1);
 		strcpy(buffer2, base_positive);
@@ -42,7 +42,7 @@ size_t LoadImage(unsigned int which_faces, unsigned int which_not_faces,
 		pos_iis.push_back(IntegralImage(img_placeholder)); 
 	}
 	// Get integral image of each NEGATIVE sample
-	for(i=0; i < which_not_faces; ++i)
+	for(i=0; i < which_not_objs; ++i)
 	{
 		sprintf(buffer, "nonface%04d", i+1);
 		strcpy(buffer2, base_negative);
@@ -59,7 +59,7 @@ size_t LoadImage(unsigned int which_faces, unsigned int which_not_faces,
 	return num_skipped;
 }
 
-vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int which_not_faces,
+vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which_not_objs,
                                      unsigned int how_many, unsigned int total_set)
 {
 	size_t i;
@@ -71,7 +71,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_faces, unsigned int whic
 	vector<double> neg_weights; // 负样本权重
 
 	size_t num_skipped;
-	num_skipped = LoadImage(which_faces, which_not_faces, pos_iis, neg_iis);
+	num_skipped = LoadImage(which_objs, which_not_objs, pos_iis, neg_iis);
 	cout << "Images are loaded. " << num_skipped << " skipped." << endl;
 
 	// 初始化正样本权重
@@ -306,7 +306,7 @@ void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<
 	*false_pos_rate = best_false_pos_sum / negative_results.size();
 }
 
-void SaveAdaBoost(vector<AdaBoostFeature*> to_save, const char* const filename)
+void SaveAdaBoost(const vector<AdaBoostFeature*> to_save, const char* filename)
 {
 	ofstream save_file;
 	save_file.open(filename);
