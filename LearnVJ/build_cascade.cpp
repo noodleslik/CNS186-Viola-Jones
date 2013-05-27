@@ -32,9 +32,8 @@ void build_cascade(unsigned int n_pos, unsigned int n_neg, const char *file)
 	char filename[128];
 	size_t feature_i = 0, stage_i = 0;
 	double detect_rate, false_pos_rate;
-	#define Detection 0.98
-	#define False_pos 0.35
-	double Detect_rate = Detection;
+	#define False_pos          0.20
+	#define False_pos_update   (1 - False_pos)
 	double False_pos_rate = False_pos;
 	vector<AdaBoostFeature*> features;
 	while(feature_i < afeatures.size())
@@ -43,22 +42,25 @@ void build_cascade(unsigned int n_pos, unsigned int n_neg, const char *file)
 		detect_rate = pos_count(features, pos_iis) / pos_iis.size();
 		false_pos_rate = pos_count(features, neg_iis) / neg_iis.size();
 		//printf("[%lf - %lf]", detect_rate, false_pos_rate);
-		if(detect_rate > Detect_rate && false_pos_rate < False_pos_rate)
+		if(false_pos_rate < False_pos_rate)
 		{
 			sprintf(filename, "stage%03d.txt", stage_i);
-			printf("**detect %lf(%lf), false positive %lf(%lf)\n",
-					detect_rate, Detect_rate, false_pos_rate, False_pos_rate);
+			printf("**detection rate %lf, false positive %lf(%lf)\n",
+					detect_rate, false_pos_rate, False_pos_rate);
 			printf("**save %s %d features\n", filename, features.size());
 			SaveAdaBoost(features, filename);
 			features.clear();
 			++stage_i;
-			Detect_rate *= Detection;
-			False_pos_rate *= (1 - False_pos);
-			getchar();
+			False_pos_rate *= False_pos_update;
 		}
 		++feature_i;
 	}
 	printf("**left %d features\n", features.size());
+	sprintf(filename, "stage%03d.txt", stage_i);
+	printf("**save %s %d features\n", filename, features.size());
+	SaveAdaBoost(features, filename);
+	
+	printf("**Total %d stage cascades\n", stage_i);
 }
 
 int main(int argc, const char *argv[])
