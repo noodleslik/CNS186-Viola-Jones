@@ -1,12 +1,12 @@
 CC = g++
-CPPFLAGS = `pkg-config --cflags opencv` -Wall
-LIBS = `pkg-config --libs opencv`
+CPPFLAGS = `pkg-config --cflags opencv` -Wall -fopenmp
+LIBS = `pkg-config --libs opencv` -fopenmp
 
 all: adaboost_main conv build_cascade verify
 
 adaboost_main.o: adaboost_main.cpp
 
-adaboost.o: adaboost.cpp adaboost.cpp feature_type.h
+adaboost.o: adaboost.cpp adaboost.h feature_type.h ../Array/array.hpp
 
 features.o: features.cpp features.h feature_type.h
 

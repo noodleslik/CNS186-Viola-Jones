@@ -16,22 +16,22 @@ using namespace cv;
 
 const char* const base_positive = "../24/faces/";
 const char* const base_negative = "../24/nonfaces/";
-const char* const extension = ".bmp";
-const char* const extension2 = ".bmp";
+const char* const pos_extension = ".bmp";
+const char* const neg_extension = ".bmp";
 
 size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs, 
                  vector<Mat> &pos_iis, vector<Mat> &neg_iis)
 {
 	char buffer[64], buffer2[128];
-	size_t i, num_skipped = 0;
+	size_t num_skipped = 0;
 	Mat img_placeholder;
 	// Get integral image of each POSITIVE sample
-	for(i=0; i < which_objs; ++i)
+	for(size_t i = 0; i < which_objs; ++i)
 	{
 		sprintf(buffer, "face%04d", i+1);
 		strcpy(buffer2, base_positive);
 		strcat(buffer2, buffer);
-		strcat(buffer2, extension);
+		strcat(buffer2, pos_extension);
 		img_placeholder = imread(buffer2, 0);
 		if(img_placeholder.data == NULL)
 		{
@@ -42,12 +42,12 @@ size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs,
 		pos_iis.push_back(IntegralImage(img_placeholder)); 
 	}
 	// Get integral image of each NEGATIVE sample
-	for(i=0; i < which_not_objs; ++i)
+	for(size_t i = 0; i < which_not_objs; ++i)
 	{
 		sprintf(buffer, "nonface%04d", i+1);
 		strcpy(buffer2, base_negative);
 		strcat(buffer2, buffer);
-		strcat(buffer2, extension2);
+		strcat(buffer2, neg_extension);
 		img_placeholder = imread(buffer2, 0);
 		if(img_placeholder.data == NULL) {
 			cout << buffer2 << " does not exist in negative" << endl;
@@ -62,13 +62,12 @@ size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs,
 vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which_not_objs,
                                      unsigned int how_many, unsigned int total_set)
 {
-	size_t i;
-	vector<AdaBoostFeature*> container;
+	vector<AdaBoostFeature*> afeatures;
 	// Generate integral images.
 	vector<Mat> pos_iis;        // 正样本积分图
-	vector<double> pos_weights; // 正样本权重
 	vector<Mat> neg_iis;        // 负样本积分图
-	vector<double> neg_weights; // 负样本权重
+	array<double> pos_weights;  // 正样本权重
+	array<double> neg_weights;  // 负样本权重
 
 	size_t num_skipped;
 	num_skipped = LoadImage(which_objs, which_not_objs, pos_iis, neg_iis);
@@ -76,16 +75,12 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 
 	// 初始化正样本权重
 	// Initial weights of each POSITIVE sample  =  1/(2*n)
-	for(i=0; i < pos_iis.size(); ++i)
-	{
+	for(size_t i = 0; i < pos_iis.size(); ++i)
 		pos_weights.push_back((double)(1)/(double)(2 * pos_iis.size()));
-	}
 	// 初始化负样本权重
 	// Initial weights of each NEGATIVE sample  =  1/(2*m)
-	for(i=0; i < neg_iis.size(); ++i)
-	{
+	for(size_t i = 0; i < neg_iis.size(); ++i)
 		neg_weights.push_back((double)(1)/(double)(2 * neg_iis.size()));
-	}
 	
 	// Generate random features. 产生随机特征
 	set<Feature*>* feature_set;
@@ -98,14 +93,14 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 	clock_t start;
 	double minutes;
 	// Run AdaBoost rounds. Get one best feature one iteration
-	for(i=0; i < how_many; ++i)
+	for(size_t i = 0; i < how_many; ++i)
 	{
 		start = clock();
 		cout <<"======Running round "<<i<<" of Adaboost======"<< endl;
 		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_set);
 		if(best_feature)
 		{
-			container.push_back(best_feature);
+			afeatures.push_back(best_feature);
 			feature_set->erase(best_feature->feature);
 		}
 		else
@@ -121,27 +116,26 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 		cout << (long)(minutes) % 60 << " mins remaining..." << endl;
 	}
 
-	return container;
+	return afeatures;
 }
 
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
-                                  vector<double> &pos_weights, vector<double> &neg_weights,
+                                  array<double> &pos_weights, array<double> &neg_weights,
                                   const set<Feature*> *feature_set)
 {
 	/** Step 1. Normalize the weights 归一化权重，所有正负样本 */
 	cout << "Normalizing Weights..." << endl;
-	double weight_sums = 0;
-	vector<double>::iterator it;
+	double weights_sum = 0;
 	// calculate sum of positive and negative sample weights
-	for(it = pos_weights.begin(); it != pos_weights.end(); ++it)
-		weight_sums += *it;
-	for(it = neg_weights.begin(); it != neg_weights.end(); ++it)
-		weight_sums += *it;
+	for(size_t i = 0; i < pos_weights.size(); ++i)
+		weights_sum += pos_weights[i];
+	for(size_t i = 0; i < neg_weights.size(); ++i)
+		weights_sum += neg_weights[i];
 	// do normalize
-	for(it = pos_weights.begin(); it != pos_weights.end(); ++it)
-		*it /= weight_sums;
-	for(it = neg_weights.begin(); it != neg_weights.end(); ++it)
-		*it /= weight_sums;
+	for(size_t i = 0; i < pos_weights.size(); ++i)
+		pos_weights[i] /= weights_sum;
+	for(size_t i = 0; i < neg_weights.size(); ++i)
+		neg_weights[i] /= weights_sum;
 
 	/** Step 2. Find the feature with the best error */
 	// 找到错误率最小的特征（弱分类器）
@@ -153,18 +147,15 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	Feature* best_feature = NULL;
 	best_error = numeric_limits<double>::infinity();
 	best_false_pos_rate = numeric_limits<double>::infinity();
-	vector<Mat>::const_iterator im_it;
 	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
 	// for each random feature, find a *single* best feature
 	set<Feature*>::const_iterator feature_it;
 	for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it)
 	{
-
 		if((*feature_it)->positive_results.empty())
 			(*feature_it)->calculate_pos_results(pos_iis);
 		if((*feature_it)->negative_results.empty())
 			(*feature_it)->calculate_neg_results(neg_iis);
-		
 		// 找出当前弱分类器的阈值，极性和错误率。
 		FindThresholdAndPolarity((*feature_it)->positive_results,
 		                         (*feature_it)->negative_results,
@@ -190,22 +181,21 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	/** Step 3. Update the weights */
 	cout << "Updating weights... ";
 	// 更新正/负样本权重
-	size_t i;
 	double beta = (best_error)/(1 - best_error);
 	cout << "beta = " << beta << endl;
 	// use beta to update weights of each Positive and Negative feature
 	// 如果正/负样本可以被正确分类，则更新该*样本*的权重
-	const vector<int> &positive_results = best_feature->positive_results;
-	const vector<int> &negative_results = best_feature->negative_results;
+	const array<int> &positive_results = best_feature->positive_results;
+	const array<int> &negative_results = best_feature->negative_results;
 	assert(positive_results.size() == pos_weights.size());
-	for(i = 0; i < positive_results.size(); ++i)
+	for(size_t i = 0; i < positive_results.size(); ++i)
 	{
 		// Correctly identified as true, reduce weight. Else leave the same
 		if(best_polarity * positive_results[i] < best_polarity * best_threshold)
 			pos_weights[i] *= beta;
 	}
 	assert(negative_results.size() == neg_weights.size());
-	for(i = 0; i < negative_results.size(); ++i)
+	for(size_t i = 0; i < negative_results.size(); ++i)
 	{
 		// Correctly identified as false, reduce weight. Else leave the same
 		if(best_polarity * negative_results[i] >= best_polarity * best_threshold)
@@ -224,24 +214,24 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 
 // Try every example value as the threshold. This is WLOG.
 // 找出某个弱分类器的阈值，极性和错误率。
-void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<int> &negative_results, 
-                              const vector<double> &pos_weights, const vector<double> &neg_weights,
+void FindThresholdAndPolarity(const array<int> &positive_results, const array<int> &negative_results, 
+                              const array<double> &pos_weights, const array<double> &neg_weights,
                               int* threshold, int* polarity, double* error, double* false_pos_rate)
 {
-	unsigned int i, its, total_samples;
-	vector<int>::const_iterator it;
+	size_t total_samples;
 	int best_threshold = 0;
 	int best_polarity = 0;
+	double best_error = 0;
+	double best_false_pos_sum; // 假阳性数
 	double pos_pol_err_sum, neg_pol_err_sum;
-	double best_error;
-	double false_pos_sum1, false_pos_sum2, best_false_pos_sum; // 假阳性数
+	double false_pos_sum1, false_pos_sum2;
 	// 初始化为无穷大
 	best_error = numeric_limits<double>::infinity();
 	best_false_pos_sum = numeric_limits<double>::infinity();
 	// 论文中为加权错误率=w*|h-y|，当正确分类时|h-y|=0
 	// for weak classifier of each sample, update threshold, polarity and error
 	total_samples = positive_results.size() + negative_results.size();
-	for(its = 0; its < total_samples; its++)
+	for(size_t its = 0; its < total_samples; its++)
 	{
 		pos_pol_err_sum = 0; // 作为*正*特征的加权错误率之和 S+
 		neg_pol_err_sum = 0; // 作为*负*特征的加权错误率之和 N+
@@ -251,37 +241,41 @@ void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<
 		else
 			cur_threshold = negative_results[its-positive_results.size()];
 		// 计算当前*样本权值*作为*阈值*的错误率
-		for(i=0; i < positive_results.size(); ++i) {
+		for(size_t i = 0; i < positive_results.size(); ++i)
+		{
 			// Misclasified with polarity of 1
-			if(!(positive_results[i]*1 < cur_threshold*1)) { 
-				pos_pol_err_sum += pos_weights.at(i);
-			}
+			if(!(positive_results[i]*1 < cur_threshold*1))
+				pos_pol_err_sum += pos_weights[i];
 			// Misclassified with polarity of -1
-			if(!(positive_results[i]*-1 < cur_threshold*-1)) {
-				neg_pol_err_sum += pos_weights.at(i);
-			}
+			if(!(positive_results[i]*-1 < cur_threshold*-1))
+				neg_pol_err_sum += pos_weights[i];
 		}
 		false_pos_sum1 = 0;
 		false_pos_sum2 = 0;
-		for(i=0; i < negative_results.size(); ++i) {
+		for(size_t i = 0; i < negative_results.size(); ++i)
+		{
 			// Misclasified with polarity of 1
-			if(!(negative_results[i]*1 >= cur_threshold*1)) { 
-				pos_pol_err_sum += neg_weights.at(i);
+			if(!(negative_results[i]*1 >= cur_threshold*1))
+			{
+				pos_pol_err_sum += neg_weights[i];
 				false_pos_sum1++;
 			}
 			// Misclassified with polarity of -1
-			if(!(negative_results[i]*-1 >= cur_threshold*-1)) {
-				neg_pol_err_sum += neg_weights.at(i);
+			if(!(negative_results[i]*-1 >= cur_threshold*-1))
+			{
+				neg_pol_err_sum += neg_weights[i];
 				false_pos_sum2++;
 			}
 		}
-		if(pos_pol_err_sum < best_error) {
+		if(pos_pol_err_sum < best_error)
+		{
 			best_threshold = cur_threshold;
 			best_polarity = 1;
 			best_error = pos_pol_err_sum;
 			best_false_pos_sum = false_pos_sum1;
 		}
-		if(neg_pol_err_sum < best_error) {
+		if(neg_pol_err_sum < best_error)
+		{
 			best_threshold = cur_threshold;
 			best_polarity = -1; 
 			best_error = neg_pol_err_sum;

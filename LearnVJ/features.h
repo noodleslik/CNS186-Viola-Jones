@@ -2,6 +2,7 @@
 #define LEARNVJ_FEATURES_H_
 
 #include "feature_type.h"
+#include "../Array/array.hpp"
 #include <opencv2/opencv.hpp>
 #include <set>
 
@@ -40,8 +41,8 @@ struct Feature
 		x1 = f.x1; x2 = f.x2;
 		y1 = f.y1; y2 = f.y2;
 	}
-	vector<int> positive_results; // feature value of positive samples
-	vector<int> negative_results; // feature value of negative samples
+	array<int> positive_results; // feature value of positive samples
+	array<int> negative_results; // feature value of negative samples
 	void calculate_pos_results(const vector<Mat> &pos_iis)
 	{
 		vector<Mat>::const_iterator im_it;

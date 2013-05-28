@@ -1,6 +1,7 @@
 #ifndef LEARNVJ_ADABOOST_H
 #define LEARNVJ_ADABOOST_H
 
+#include "../Array/array.hpp"
 #include <opencv2/opencv.hpp>
 #include <set>
 
@@ -31,13 +32,13 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 // Runs one round of the adaboost algorithm (calculates errors, finds best features, returns thresh, feat, pol). 
 // Also updates weightings. Modifies weightings correctly and removes the selected feature from the feature set.
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
-                                  vector<double> &pos_weights, vector<double> &neg_weights,
+                                  array<double> &pos_weights, array<double> &neg_weights,
                                   const set<Feature*> *feature_set);
 
 // Given a set of positive and negative values of a particular feature,Puts the best
 // threshold and polarity as well as total error based on weightings into the given vars
-void FindThresholdAndPolarity(const vector<int> &positive_examples, const vector<int> &negative_examples,
-                              const vector<double> &pos_weights, const vector<double> &neg_weights,
+void FindThresholdAndPolarity(const array<int> &positive_examples, const array<int> &negative_examples,
+                              const array<double> &pos_weights, const array<double> &neg_weights,
                               int* threshold, int* polarity, double* error, double* false_pos_rate);
 
 // Save weak classifiers to file
