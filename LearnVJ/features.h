@@ -13,13 +13,23 @@ using namespace cv;
  * (such as checking validity or generating random sets of them).
  */
 
+struct Feature;
+
 const int SUBWINDOW_SIZE = 24;
+
+set<Feature*>* GenerateAllFeatures(int step);
+// Generate a set of n features. If a non-default value of snap_to is provided
+// Function will not check that
+// num_features is smaller than the possible number of features, so if it is too big, the function will loop.
+set<Feature*>* GenerateRandomFeatures(int num_features);
+
+// Calculates a feature given the IntegralImage
+int CalculateFeature(Feature* feature, const Mat& integral_image);
 
 struct Feature
 {
 	FeatureTypeT type;
-	// Required for all feature types 
-	// (UL, LR points of rectangle 1):
+	// (UL, LR points of rectangle 1)
 	int x1, y1; // Up Left
 	int x2, y2; // Low Right
 	// All remaining coordinates are determined since all rectangles are same size and shape 
@@ -30,16 +40,21 @@ struct Feature
 		x1 = f.x1; x2 = f.x2;
 		y1 = f.y1; y2 = f.y2;
 	}
+	vector<int> positive_results; // feature value of positive samples
+	vector<int> negative_results; // feature value of negative samples
+	void calculate_pos_results(const vector<Mat> &pos_iis)
+	{
+		vector<Mat>::const_iterator im_it;
+		for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it)
+			positive_results.push_back(CalculateFeature(this, *im_it));
+	}
+	void calculate_neg_results(const vector<Mat> &neg_iis)
+	{
+		vector<Mat>::const_iterator im_it;
+		for(im_it = neg_iis.begin(); im_it != neg_iis.end(); ++im_it)
+			negative_results.push_back(CalculateFeature(this, *im_it));
+	}
 };
-
-set<Feature*>* GenerateAllFeatures(int step);
-// Generate a set of n features. If a non-default value of snap_to is provided
-// Function will not check that
-// num_features is smaller than the possible number of features, so if it is too big, the function will loop.
-set<Feature*>* GenerateRandomFeatures(int num_features);
-
-// Calculates a feature given the IntegralImage
-int CalculateFeature(Feature* feature, const Mat& integral_image);
 
 #endif
 

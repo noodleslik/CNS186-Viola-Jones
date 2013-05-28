@@ -32,7 +32,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 // Also updates weightings. Modifies weightings correctly and removes the selected feature from the feature set.
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
                                   vector<double> &pos_weights, vector<double> &neg_weights,
-                                  set<Feature*> *feature_set);
+                                  const set<Feature*> *feature_set);
 
 // Given a set of positive and negative values of a particular feature,Puts the best
 // threshold and polarity as well as total error based on weightings into the given vars

@@ -126,7 +126,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
                                   vector<double> &pos_weights, vector<double> &neg_weights,
-                                  set<Feature*> *feature_set)
+                                  const set<Feature*> *feature_set)
 {
 	/** Step 1. Normalize the weights 归一化权重，所有正负样本 */
 	cout << "Normalizing Weights..." << endl;
@@ -154,24 +154,20 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	best_error = numeric_limits<double>::infinity();
 	best_false_pos_rate = numeric_limits<double>::infinity();
 	vector<Mat>::const_iterator im_it;
-	vector<int> positive_results; // feature value of positive sample 
-	vector<int> negative_results; // feature value of negative sample
 	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
 	// for each random feature, find a *single* best feature
 	set<Feature*>::const_iterator feature_it;
 	for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it)
 	{
-		positive_results.clear();
-		negative_results.clear();
-		// calcualte feature's value of each positive sample
-		for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it)
-			positive_results.push_back(CalculateFeature(*feature_it, *im_it));
-		// calcualte feature's value of each negative sample
-		for(im_it = neg_iis.begin(); im_it != neg_iis.end(); ++im_it)
-			negative_results.push_back(CalculateFeature(*feature_it, *im_it));
+
+		if((*feature_it)->positive_results.empty())
+			(*feature_it)->calculate_pos_results(pos_iis);
+		if((*feature_it)->negative_results.empty())
+			(*feature_it)->calculate_neg_results(neg_iis);
 		
 		// 找出当前弱分类器的阈值，极性和错误率。
-		FindThresholdAndPolarity(positive_results, negative_results,
+		FindThresholdAndPolarity((*feature_it)->positive_results,
+		                         (*feature_it)->negative_results,
 		                         pos_weights, neg_weights,
 		                         &cur_threshold, &cur_polarity,
 		                         &cur_error, &cur_false_pos_rate);
@@ -193,21 +189,14 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	
 	/** Step 3. Update the weights */
 	cout << "Updating weights... ";
-	positive_results.clear();
-	negative_results.clear();
-	// 计算最佳错误率特征在正/负样本中的值
-	// calcualte best_feature's value of each positive sample
-	for(im_it = pos_iis.begin(); im_it != pos_iis.end(); ++im_it)
-		positive_results.push_back(CalculateFeature(best_feature, *im_it));
-	// calcualte best_feature's value of each negative sample
-	for(im_it = neg_iis.begin(); im_it != neg_iis.end(); ++im_it)
-		negative_results.push_back(CalculateFeature(best_feature, *im_it));
 	// 更新正/负样本权重
 	size_t i;
 	double beta = (best_error)/(1 - best_error);
 	cout << "beta = " << beta << endl;
 	// use beta to update weights of each Positive and Negative feature
 	// 如果正/负样本可以被正确分类，则更新该*样本*的权重
+	const vector<int> &positive_results = best_feature->positive_results;
+	const vector<int> &negative_results = best_feature->negative_results;
 	assert(positive_results.size() == pos_weights.size());
 	for(i = 0; i < positive_results.size(); ++i)
 	{
@@ -233,7 +222,6 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	return result;
 }
 
-// Yes this is inefficient. I am lazy. QED.
 // Try every example value as the threshold. This is WLOG.
 // 找出某个弱分类器的阈值，极性和错误率。
 void FindThresholdAndPolarity(const vector<int> &positive_results, const vector<int> &negative_results, 

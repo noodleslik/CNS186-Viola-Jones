@@ -43,5 +43,8 @@ verify: verify_main verify_cascade
 
 clean:
 	rm -rf *.o adaboost_main conv build_cascade
-	rm -rf verify_main verify_cascade stage0*.txt
+	rm -rf verify_main verify_cascade 
+
+dist_clean: clean
+	rm -rf stage0*.txt
 

@@ -9,13 +9,13 @@ bool is_object(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, int x
 // count number of passed result
 double pos_count(const vector<AdaBoostFeature*> &afeatures, const vector<Mat> &iis)
 {
-	double neg_cnt = 0;
+	double pos_cnt = 0;
 	for(size_t i = 0; i < iis.size(); ++i)
 	{
 		if(is_object(afeatures, iis[i], 0, 0))
-			++neg_cnt;
+			++pos_cnt;
 	}
-	return neg_cnt;
+	return pos_cnt;
 }
 
 void build_cascade(unsigned int n_pos, unsigned int n_neg, const char *file)
