@@ -49,17 +49,20 @@ int main(int argc, char *argv[])
 			{
 				Point pt1, pt2;
 				Scalar scalar(255, 255, 0, 0);
-				pt1 = points[i];
-				pt2.x = pt1.x + SUBWINDOW_SIZE;
-				pt2.y = pt1.y + SUBWINDOW_SIZE;
-				rectangle(img, pt1, pt2, scalar);
+				double width_scale = (double)orig.cols / (double)img_width;
+				double height_scale = (double)orig.rows / (double)img_height;
+				pt1.x = points[i].x * width_scale;
+				pt1.y = points[i].y * height_scale;
+				pt2.x = pt1.x + SUBWINDOW_SIZE * width_scale;
+				pt2.y = pt1.y + SUBWINDOW_SIZE * height_scale;
+				rectangle(orig, pt1, pt2, scalar);
 			}
-			imshow("Image", img);
-			waitKey();
 		}
 		img_width *= 0.85;
 		img_height *= 0.85;
 	}
+	imshow("Image", orig);
+	waitKey();
 	
 	return 0;
 }

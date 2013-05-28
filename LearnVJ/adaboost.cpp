@@ -136,7 +136,6 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 		pos_weights[i] /= weights_sum;
 	for(size_t i = 0; i < neg_weights.size(); ++i)
 		neg_weights[i] /= weights_sum;
-
 	/** Step 2. Find the feature with the best error */
 	// 找到错误率最小的特征（弱分类器）
 	cout << "Finding best feature..." << endl;
