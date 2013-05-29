@@ -1,6 +1,6 @@
 CC = g++
-CPPFLAGS = `pkg-config --cflags opencv` -Wall
-LIBS = `pkg-config --libs opencv`
+CPPFLAGS = `pkg-config --cflags opencv` -Wall -lpthread
+LIBS = `pkg-config --libs opencv` -lpthread
 
 all: adaboost_main conv build_cascade verify
 

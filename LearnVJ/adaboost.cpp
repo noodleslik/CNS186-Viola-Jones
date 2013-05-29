@@ -20,7 +20,7 @@ const char* const pos_extension = ".bmp";
 const char* const neg_extension = ".bmp";
 
 size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs, 
-                 vector<Mat> &pos_iis, vector<Mat> &neg_iis)
+                 array<Mat> &pos_iis, array<Mat> &neg_iis)
 {
 	char buffer[64], buffer2[128];
 	size_t num_skipped = 0;
@@ -64,8 +64,8 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 {
 	vector<AdaBoostFeature*> afeatures;
 	// Generate integral images.
-	vector<Mat> pos_iis;        // 正样本积分图
-	vector<Mat> neg_iis;        // 负样本积分图
+	array<Mat> pos_iis;         // 正样本积分图
+	array<Mat> neg_iis;         // 负样本积分图
 	array<double> pos_weights;  // 正样本权重
 	array<double> neg_weights;  // 负样本权重
 
@@ -73,16 +73,14 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 	num_skipped = LoadImage(which_objs, which_not_objs, pos_iis, neg_iis);
 	cout << "Images are loaded. " << num_skipped << " skipped." << endl;
 
-	// 初始化正样本权重
 	// Initial weights of each POSITIVE sample  =  1/(2*n)
 	for(size_t i = 0; i < pos_iis.size(); ++i)
 		pos_weights.push_back((double)(1)/(double)(2 * pos_iis.size()));
-	// 初始化负样本权重
 	// Initial weights of each NEGATIVE sample  =  1/(2*m)
 	for(size_t i = 0; i < neg_iis.size(); ++i)
 		neg_weights.push_back((double)(1)/(double)(2 * neg_iis.size()));
 	
-	// Generate random features. 产生随机特征
+	// Generate features.
 	list<Feature*>* feature_list;
 	if(total_set)
 		feature_list = GenerateRandomFeatures(total_set);
@@ -118,12 +116,76 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 	return afeatures;
 }
 
+#ifdef _NUM_THREADS
+#include <pthread.h>
+#endif
 
+typedef struct param
+{
+#ifdef _NUM_THREADS
+	pthread_t thread_t;
+#endif
+	// input
+	const array<Mat> *pos_iis, *neg_iis;
+	const array<double> *pos_weights, *neg_weights;
+	list<Feature*>::iterator begin, end;
+	// output
+	AdaBoostFeature* result;
+}param;
 
-AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
+static void* FindBestFeature_thread(void *para)
+{
+	param *p = (param *)para;
+	int cur_threshold, best_threshold = 0;
+	int cur_polarity, best_polarity = 0;
+	double cur_error, best_error = numeric_limits<double>::infinity();
+	double cur_false_pos_rate, best_false_pos_rate = numeric_limits<double>::infinity();
+	list<Feature*>::iterator feature_it, best_feature_it;	
+	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
+	for(feature_it = p->begin; feature_it != p->end; ++feature_it)
+	{
+		if((*feature_it)->positive_results.empty())
+			(*feature_it)->calculate_pos_results(*(p->pos_iis));
+		if((*feature_it)->negative_results.empty())
+			(*feature_it)->calculate_neg_results(*(p->neg_iis));
+		// 找出当前弱分类器的阈值，极性和错误率。
+		FindThresholdAndPolarity((*feature_it)->positive_results,
+		                         (*feature_it)->negative_results,
+		                         *(p->pos_weights), *(p->neg_weights),
+		                         &cur_threshold, &cur_polarity,
+		                         &cur_error, &cur_false_pos_rate);
+		// 找到最小迭代误差之和的样本
+		if(cur_error < best_error)
+		{
+			best_error = cur_error;
+			best_threshold = cur_threshold;
+			best_polarity = cur_polarity;
+			best_false_pos_rate = cur_false_pos_rate;
+			best_feature_it = feature_it;
+		}
+	}
+	// 错误率大于0.5则舍弃
+	if(best_error > 0.5)
+	{
+		p->result = NULL;
+		return NULL;
+	}
+	p->result = new AdaBoostFeature();
+	p->result->feature = *best_feature_it;
+	p->result->threshold = best_threshold;
+	p->result->polarity = best_polarity;
+	p->result->beta_t = (best_error)/(1 - best_error);
+	p->result->false_pos_rate = best_false_pos_rate;
+	p->result->error_rate = best_error;
+	p->result->feature_it = best_feature_it;
+	return NULL;
+}
+
+AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &neg_iis,
                                   array<double> &pos_weights, array<double> &neg_weights,
                                   list<Feature*> *feature_list)
 {
+	AdaBoostFeature* result;
 	/** Step 1. Normalize the weights 归一化权重，所有正负样本 */
 	cout << "Normalizing Weights..." << endl;
 	double weights_sum = 0;
@@ -137,81 +199,93 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 		pos_weights[i] /= weights_sum;
 	for(size_t i = 0; i < neg_weights.size(); ++i)
 		neg_weights[i] /= weights_sum;
+
 	/** Step 2. Find the feature with the best error */
 	// 找到错误率最小的特征（弱分类器）
 	cout << "Finding best feature..." << endl;
-	int cur_threshold, best_threshold = 0;
-	int cur_polarity, best_polarity = 0;
-	double cur_error, best_error = numeric_limits<double>::infinity();
-	double cur_false_pos_rate, best_false_pos_rate = numeric_limits<double>::infinity();
-	Feature* best_feature = NULL;
-	list<Feature*>::iterator best_feature_it;
-	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
-	// for each random feature, find a *single* best feature
-	list<Feature*>::iterator feature_it;
-	for(feature_it = feature_list->begin(); feature_it != feature_list->end(); ++feature_it)
+	result = NULL;
+#ifndef _NUM_THREADS
+	param para;
+	para.pos_iis = &pos_iis;
+	para.neg_iis = &neg_iis;
+	para.pos_weights = &pos_weights;
+	para.neg_weights = &neg_weights;
+	para.begin = feature_list->begin();
+	para.end = feature_list->end();
+	FindBestFeature_thread(&para);
+	result = para.result;
+#else
+	param para[_NUM_THREADS];
+	size_t step_size = feature_list->size() / _NUM_THREADS;
+	for(size_t i = 0; i < _NUM_THREADS; ++i)
 	{
-		if((*feature_it)->positive_results.empty())
-			(*feature_it)->calculate_pos_results(pos_iis);
-		if((*feature_it)->negative_results.empty())
-			(*feature_it)->calculate_neg_results(neg_iis);
-		// 找出当前弱分类器的阈值，极性和错误率。
-		FindThresholdAndPolarity((*feature_it)->positive_results,
-		                         (*feature_it)->negative_results,
-		                         pos_weights, neg_weights,
-		                         &cur_threshold, &cur_polarity,
-		                         &cur_error, &cur_false_pos_rate);
-		// update best error 找到最小迭代误差之和的样本
-		if(cur_error < best_error)
+		para[i].pos_iis = &pos_iis;
+		para[i].neg_iis = &neg_iis;
+		para[i].pos_weights = &pos_weights;
+		para[i].neg_weights = &neg_weights;
+		para[i].begin = feature_list->begin();
+		advance(para[i].begin, i * step_size);
+		if(i == _NUM_THREADS - 1)
+			para[i].end = feature_list->end();
+		else
 		{
-			best_error = cur_error;
-			best_threshold = cur_threshold;
-			best_polarity = cur_polarity;
-			best_false_pos_rate = cur_false_pos_rate;
-			best_feature = *feature_it;
-			best_feature_it = feature_it;
+			para[i].end = para[i].begin;
+			advance(para[i].end, step_size);
+		}
+		printf(".");
+		pthread_create(&para[i].thread_t, NULL, FindBestFeature_thread, &para[i]);
+	}
+	fflush(stdout);
+	for(size_t i = 0; i < _NUM_THREADS; i++)
+	{
+		pthread_join(para[i].thread_t, NULL);
+		if(result == NULL)
+		{
+			result = para[i].result;
+		}
+		else if(para[i].result != NULL)
+		{
+			if(para[i].result->error_rate < result->error_rate)
+			{
+				delete result;
+				result = para[i].result;
+			}
+			else
+				delete para[i].result;
 		}
 	}
-	// 错误率大于0.5则舍弃
-	if(best_error > 0.5)
+	printf("merged\n");
+#endif
+	if(result == NULL)
 		return NULL;
-	cout << "Weighted error rate " << best_error << endl;
-	cout << "False positive rate " << best_false_pos_rate << endl;
-	
+	cout << "Weighted error rate " << result->error_rate << endl;
+	cout << "False positive rate " << result->false_pos_rate << endl;
+
 	/** Step 3. Update the weights */
 	cout << "Updating weights... ";
-	// 更新正/负样本权重
-	double beta = (best_error)/(1 - best_error);
-	cout << "beta = " << beta << endl;
+	cout << "beta = " << result->beta_t << endl;
 	// use beta to update weights of each Positive and Negative feature
 	// 如果正/负样本可以被正确分类，则更新该*样本*的权重
-	const array<int> &positive_results = best_feature->positive_results;
-	const array<int> &negative_results = best_feature->negative_results;
+	const array<int> &positive_results = result->feature->positive_results;
+	const array<int> &negative_results = result->feature->negative_results;
 	assert(positive_results.size() == pos_weights.size());
 	for(size_t i = 0; i < positive_results.size(); ++i)
 	{
 		// Correctly identified as true, reduce weight. Else leave the same
-		if(best_polarity * positive_results[i] < best_polarity * best_threshold)
-			pos_weights[i] *= beta;
+		if(result->polarity * positive_results[i] < result->polarity * result->threshold)
+			pos_weights[i] *= result->beta_t;
 	}
 	assert(negative_results.size() == neg_weights.size());
 	for(size_t i = 0; i < negative_results.size(); ++i)
 	{
 		// Correctly identified as false, reduce weight. Else leave the same
-		if(best_polarity * negative_results[i] >= best_polarity * best_threshold)
-			neg_weights[i] *= beta;
+		if(result->polarity * negative_results[i] >= result->polarity * result->threshold)
+			neg_weights[i] *= result->beta_t;
 	}
-	
+
 	/** Remove best feature from feature list */
-	feature_list->erase(best_feature_it);
-	
-	/** Return best feature */
-	AdaBoostFeature* result = new AdaBoostFeature();
-	result->feature = best_feature;
-	result->threshold = best_threshold;
-	result->polarity = best_polarity;
-	result->beta_t = beta;
-	result->false_pos_rate = best_false_pos_rate;
+	feature_list->erase(result->feature_it);
+
 	return result;
 }
 

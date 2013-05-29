@@ -7,7 +7,7 @@ extern
 bool is_object(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, int x, int y);
 
 // count number of passed result
-double pos_count(const vector<AdaBoostFeature*> &afeatures, const vector<Mat> &iis)
+double pos_count(const vector<AdaBoostFeature*> &afeatures, const array<Mat> &iis)
 {
 	double pos_cnt = 0;
 	for(size_t i = 0; i < iis.size(); ++i)
@@ -20,7 +20,8 @@ double pos_count(const vector<AdaBoostFeature*> &afeatures, const vector<Mat> &i
 
 void build_cascade(unsigned int n_pos, unsigned int n_neg, const char *file)
 {
-	vector<Mat> pos_iis, neg_iis;
+	array<Mat> pos_iis;
+	array<Mat> neg_iis;
 	vector<AdaBoostFeature*> afeatures;
 	// load all features
 	load_afeatures(afeatures, file);
@@ -32,7 +33,7 @@ void build_cascade(unsigned int n_pos, unsigned int n_neg, const char *file)
 	char filename[128];
 	size_t feature_i = 0, stage_i = 0;
 	double detect_rate, false_pos_rate;
-	#define False_pos          0.14
+	#define False_pos          0.13
 	#define False_pos_update   (1 - False_pos)
 	double False_pos_rate = False_pos;
 	vector<AdaBoostFeature*> features;

@@ -7,6 +7,8 @@
 using namespace cv;
 using namespace std;
 
+#define _NUM_THREADS 3
+
 struct Feature;
 
 struct AdaBoostFeature
@@ -16,10 +18,13 @@ struct AdaBoostFeature
 	int polarity; // -1 or 1, 极性
 	double beta_t;
 	double false_pos_rate;
+	// internal usage
+	double error_rate;
+	list<Feature*>::iterator feature_it;
 };
 // Load objects
 size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs, 
-                 vector<Mat> &pos_iis, vector<Mat> &neg_iis);
+                 array<Mat> &pos_iis, array<Mat> &neg_iis);
 
 // which_objs: size of positive training set
 // which_not_objs: size of negative training set
@@ -30,7 +35,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 
 // Runs one round of the adaboost algorithm (calculates errors, finds best features, returns thresh, feat, pol). 
 // Also updates weightings. Modifies weightings correctly and removes the selected feature from the feature set.
-AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
+AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &neg_iis,
                                   array<double> &pos_weights, array<double> &neg_weights,
                                   list<Feature*> *feature_list);
 

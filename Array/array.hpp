@@ -2,8 +2,6 @@
 #define __ARRAY_HPP__
 
 #include <cstddef>
-#include <cstdlib>
-#include <cstring>
 using namespace std;
 
 #define _INI_ARRAY_SIZE 4096
@@ -20,7 +18,7 @@ public:
 	{
 		index = 0;
 		_size = _INI_ARRAY_SIZE;
-		ptr = (T*)malloc(sizeof(T)*_INI_ARRAY_SIZE);
+		ptr = new T[_size];
 	}
 	inline size_t size() const
 	{
@@ -44,16 +42,20 @@ public:
 		else
 			throw;
 	}
-	void push_back(T ele)
+	//Warning! this function isn't thread safe
+	void push_back(const T& ele)
 	{
 		if(index > _size)
 			throw;
 		if(index == _size)
 		{
-			T *temp = (T*)malloc(sizeof(T)*_size*2);
-			memcpy(temp, ptr, sizeof(T)*_size);
+			T *temp = new T[_size*2];
+			for(size_t i = 0; i < index; ++i)
+			{
+				temp[i] = ptr[i];
+			}
 			_size *= 2;
-			free(ptr);
+			delete [] ptr;
 			ptr = temp;
 		}
 		*(ptr + index) = ele;
@@ -61,7 +63,7 @@ public:
 	}
 	~array()
 	{
-		free(ptr);
+		delete [] ptr;
 	}
 };
 
