@@ -4,7 +4,6 @@
 #include "feature_type.h"
 #include "../Array/array.hpp"
 #include <opencv2/opencv.hpp>
-#include <set>
 
 using namespace std;
 using namespace cv;
@@ -18,11 +17,11 @@ struct Feature;
 
 const int SUBWINDOW_SIZE = 24;
 
-set<Feature*>* GenerateAllFeatures(int step);
+list<Feature*>* GenerateAllFeatures(int step);
 // Generate a set of n features. If a non-default value of snap_to is provided
 // Function will not check that
 // num_features is smaller than the possible number of features, so if it is too big, the function will loop.
-set<Feature*>* GenerateRandomFeatures(int num_features);
+list<Feature*>* GenerateRandomFeatures(int num_features);
 
 // Calculates a feature given the IntegralImage
 int CalculateFeature(Feature* feature, const Mat& integral_image);

@@ -83,12 +83,12 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 		neg_weights.push_back((double)(1)/(double)(2 * neg_iis.size()));
 	
 	// Generate random features. 产生随机特征
-	set<Feature*>* feature_set;
+	list<Feature*>* feature_list;
 	if(total_set)
-		feature_set = GenerateRandomFeatures(total_set);
+		feature_list = GenerateRandomFeatures(total_set);
 	else
-		feature_set = GenerateAllFeatures(2);
-	cout << feature_set->size() << " unique features generated." << endl; 
+		feature_list = GenerateAllFeatures(2);
+	cout << feature_list->size() << " unique features generated." << endl; 
 
 	clock_t start;
 	double minutes;
@@ -96,12 +96,11 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 	for(size_t i = 0; i < how_many; ++i)
 	{
 		start = clock();
-		cout <<"======Running round "<<i<<" of Adaboost======"<< endl;
-		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_set);
+		cout<<"====Running round "<<i<<" of Adaboost("<<feature_list->size()<<")===="<<endl;
+		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_list);
 		if(best_feature)
 		{
 			afeatures.push_back(best_feature);
-			feature_set->erase(best_feature->feature);
 		}
 		else
 		{
@@ -119,9 +118,11 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 	return afeatures;
 }
 
+
+
 AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> &neg_iis,
                                   array<double> &pos_weights, array<double> &neg_weights,
-                                  const set<Feature*> *feature_set)
+                                  list<Feature*> *feature_list)
 {
 	/** Step 1. Normalize the weights 归一化权重，所有正负样本 */
 	cout << "Normalizing Weights..." << endl;
@@ -139,17 +140,16 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 	/** Step 2. Find the feature with the best error */
 	// 找到错误率最小的特征（弱分类器）
 	cout << "Finding best feature..." << endl;
-	int cur_threshold, cur_polarity;
-	int best_threshold = 0, best_polarity = 0;
-	double best_error, cur_error;
-	double best_false_pos_rate, cur_false_pos_rate;
+	int cur_threshold, best_threshold = 0;
+	int cur_polarity, best_polarity = 0;
+	double cur_error, best_error = numeric_limits<double>::infinity();
+	double cur_false_pos_rate, best_false_pos_rate = numeric_limits<double>::infinity();
 	Feature* best_feature = NULL;
-	best_error = numeric_limits<double>::infinity();
-	best_false_pos_rate = numeric_limits<double>::infinity();
+	list<Feature*>::iterator best_feature_it;
 	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
 	// for each random feature, find a *single* best feature
-	set<Feature*>::const_iterator feature_it;
-	for(feature_it = feature_set->begin(); feature_it != feature_set->end(); ++feature_it)
+	list<Feature*>::iterator feature_it;
+	for(feature_it = feature_list->begin(); feature_it != feature_list->end(); ++feature_it)
 	{
 		if((*feature_it)->positive_results.empty())
 			(*feature_it)->calculate_pos_results(pos_iis);
@@ -169,6 +169,7 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 			best_polarity = cur_polarity;
 			best_false_pos_rate = cur_false_pos_rate;
 			best_feature = *feature_it;
+			best_feature_it = feature_it;
 		}
 	}
 	// 错误率大于0.5则舍弃
@@ -200,6 +201,9 @@ AdaBoostFeature* RunAdaBoostRound(const vector<Mat> &pos_iis, const vector<Mat> 
 		if(best_polarity * negative_results[i] >= best_polarity * best_threshold)
 			neg_weights[i] *= beta;
 	}
+	
+	/** Remove best feature from feature list */
+	feature_list->erase(best_feature_it);
 	
 	/** Return best feature */
 	AdaBoostFeature* result = new AdaBoostFeature();
