@@ -21,6 +21,18 @@ int main()
 			return -1;
 		}
 	}
+	array<double> a2;
+	for(size_t i = 1; i < 10; i++)
+	{
+		a2.push_back( i*10 );
+	}
+	a2.erase(8);
+	a2.erase(0);
+	for(size_t i = 0; i < a2.size(); i++)
+	{
+		cout << a2[i] << " ";
+	}
+	cout<<endl;
 	return 0;
 }
 

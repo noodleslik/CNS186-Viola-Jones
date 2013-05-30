@@ -7,7 +7,7 @@
 using namespace cv;
 using namespace std;
 
-#define _NUM_THREADS 3
+#define _NUM_THREADS 4
 
 struct Feature;
 
@@ -20,7 +20,7 @@ struct AdaBoostFeature
 	double false_pos_rate;
 	// internal usage
 	double error_rate;
-	list<Feature*>::iterator feature_it;
+	size_t feature_idx;
 };
 // Load objects
 size_t LoadImage(unsigned int which_objs, unsigned int which_not_objs, 
@@ -37,7 +37,7 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 // Also updates weightings. Modifies weightings correctly and removes the selected feature from the feature set.
 AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &neg_iis,
                                   array<double> &pos_weights, array<double> &neg_weights,
-                                  list<Feature*> *feature_list);
+                                  array<Feature*> *all_features);
 
 // Given a set of positive and negative values of a particular feature,Puts the best
 // threshold and polarity as well as total error based on weightings into the given vars

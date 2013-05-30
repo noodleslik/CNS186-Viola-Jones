@@ -30,14 +30,14 @@ public:
 	}
 	T operator [] (size_t idx) const
 	{
-		if(idx < _size)
+		if(idx >= 0 && idx < index)
 			return *(ptr+idx);
 		else
 			throw;
 	}
 	T& operator [] (size_t idx)
 	{
-		if(idx < _size)
+		if(idx >= 0 && idx < index)
 			return *(ptr+idx);
 		else
 			throw;
@@ -60,6 +60,21 @@ public:
 		}
 		*(ptr + index) = ele;
 		++index;
+	}
+	//Warning! this function isn't thread safe
+	void erase(size_t idx)
+	{
+		if(idx < 0 || idx >= index)
+			throw;
+		else
+		{
+			while(idx+1 < index)
+			{
+				ptr[idx] = ptr[idx+1];
+				++idx;
+			}
+			--index;
+		}
 	}
 	~array()
 	{

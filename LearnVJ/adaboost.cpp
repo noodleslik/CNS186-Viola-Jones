@@ -81,12 +81,12 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 		neg_weights.push_back((double)(1)/(double)(2 * neg_iis.size()));
 	
 	// Generate features.
-	list<Feature*>* feature_list;
+	array<Feature*>* all_features;
 	if(total_set)
-		feature_list = GenerateRandomFeatures(total_set);
+		all_features = GenerateRandomFeatures(total_set);
 	else
-		feature_list = GenerateAllFeatures(2);
-	cout << feature_list->size() << " unique features generated." << endl; 
+		all_features = GenerateAllFeatures(2);
+	cout << all_features->size() << " unique features generated." << endl; 
 
 	clock_t start;
 	double minutes;
@@ -94,15 +94,15 @@ vector<AdaBoostFeature*> RunAdaBoost(unsigned int which_objs, unsigned int which
 	for(size_t i = 0; i < how_many; ++i)
 	{
 		start = clock();
-		cout<<"====Running round "<<i<<" of Adaboost("<<feature_list->size()<<")===="<<endl;
-		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, feature_list);
+		cout<<"====Running round "<<i<<" of Adaboost("<<all_features->size()<<")===="<<endl;
+		AdaBoostFeature* best_feature = RunAdaBoostRound(pos_iis, neg_iis, pos_weights, neg_weights, all_features);
 		if(best_feature)
 		{
 			afeatures.push_back(best_feature);
 		}
 		else
 		{
-			cout<<"Can't find good feature any more"<<endl;
+			cout<<"Can't find good features any more"<<endl;
 			break;
 		}
 		minutes = double(clock()-start)/CLOCKS_PER_SEC/60;
@@ -128,7 +128,8 @@ typedef struct param
 	// input
 	const array<Mat> *pos_iis, *neg_iis;
 	const array<double> *pos_weights, *neg_weights;
-	list<Feature*>::iterator begin, end;
+	array<Feature*> *features;
+	size_t begin, end;
 	// output
 	AdaBoostFeature* result;
 }param;
@@ -140,50 +141,59 @@ static void* FindBestFeature_thread(void *para)
 	int cur_polarity, best_polarity = 0;
 	double cur_error, best_error = numeric_limits<double>::infinity();
 	double cur_false_pos_rate, best_false_pos_rate = numeric_limits<double>::infinity();
-	list<Feature*>::iterator feature_it, best_feature_it;	
+	size_t best_feature_idx;
 	// 对每个特征训练一个弱分类器，计算其加权错误率。找到错误率最小的。
-	for(feature_it = p->begin; feature_it != p->end; ++feature_it)
+	array<Feature*> &features = *(p->features);
+	while(p->begin < p->end)
 	{
-		if((*feature_it)->positive_results.empty())
-			(*feature_it)->calculate_pos_results(*(p->pos_iis));
-		if((*feature_it)->negative_results.empty())
-			(*feature_it)->calculate_neg_results(*(p->neg_iis));
+		if(features[p->begin]->positive_results.empty())
+			features[p->begin]->calculate_pos_results(*(p->pos_iis));
+		if(features[p->begin]->negative_results.empty())
+			features[p->begin]->calculate_neg_results(*(p->neg_iis));
 		// 找出当前弱分类器的阈值，极性和错误率。
-		FindThresholdAndPolarity((*feature_it)->positive_results,
-		                         (*feature_it)->negative_results,
+		FindThresholdAndPolarity(features[p->begin]->positive_results,
+		                         features[p->begin]->negative_results,
 		                         *(p->pos_weights), *(p->neg_weights),
 		                         &cur_threshold, &cur_polarity,
 		                         &cur_error, &cur_false_pos_rate);
 		// 找到最小迭代误差之和的样本
 		if(cur_error < best_error)
 		{
-			best_error = cur_error;
 			best_threshold = cur_threshold;
 			best_polarity = cur_polarity;
 			best_false_pos_rate = cur_false_pos_rate;
-			best_feature_it = feature_it;
+			best_error = cur_error;
+			best_feature_idx = p->begin;
 		}
+		++(p->begin);
 	}
 	// 错误率大于0.5则舍弃
 	if(best_error > 0.5)
 	{
 		p->result = NULL;
+	#ifdef _NUM_THREADS
+		pthread_exit(NULL);
+	#else
 		return NULL;
+	#endif
 	}
 	p->result = new AdaBoostFeature();
-	p->result->feature = *best_feature_it;
+	p->result->feature = features[best_feature_idx];
 	p->result->threshold = best_threshold;
 	p->result->polarity = best_polarity;
 	p->result->beta_t = (best_error)/(1 - best_error);
 	p->result->false_pos_rate = best_false_pos_rate;
 	p->result->error_rate = best_error;
-	p->result->feature_it = best_feature_it;
+	p->result->feature_idx = best_feature_idx;
+#ifdef _NUM_THREADS
+	pthread_exit(NULL);
+#endif
 	return NULL;
 }
 
 AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &neg_iis,
                                   array<double> &pos_weights, array<double> &neg_weights,
-                                  list<Feature*> *feature_list)
+                                  array<Feature*> *all_features)
 {
 	AdaBoostFeature* result;
 	/** Step 1. Normalize the weights 归一化权重，所有正负样本 */
@@ -210,35 +220,39 @@ AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &n
 	para.neg_iis = &neg_iis;
 	para.pos_weights = &pos_weights;
 	para.neg_weights = &neg_weights;
-	para.begin = feature_list->begin();
-	para.end = feature_list->end();
+	para.result = NULL;
+	para.features = all_features;
+	para.begin = 0;
+	para.end = all_features->size();
 	FindBestFeature_thread(&para);
 	result = para.result;
 #else
 	param para[_NUM_THREADS];
-	size_t step_size = feature_list->size() / _NUM_THREADS;
+	size_t step_size = all_features->size() / _NUM_THREADS;
+	printf("num_threads %d step_size %d\n", _NUM_THREADS, step_size);
 	for(size_t i = 0; i < _NUM_THREADS; ++i)
 	{
 		para[i].pos_iis = &pos_iis;
 		para[i].neg_iis = &neg_iis;
 		para[i].pos_weights = &pos_weights;
 		para[i].neg_weights = &neg_weights;
-		para[i].begin = feature_list->begin();
-		advance(para[i].begin, i * step_size);
+		para[i].result = NULL;
+		para[i].features = all_features;
+		para[i].begin = i * step_size;
 		if(i == _NUM_THREADS - 1)
-			para[i].end = feature_list->end();
+			para[i].end = all_features->size();
 		else
-		{
-			para[i].end = para[i].begin;
-			advance(para[i].end, step_size);
-		}
-		printf(".");
+			para[i].end = para[i].begin + step_size;
 		pthread_create(&para[i].thread_t, NULL, FindBestFeature_thread, &para[i]);
+		printf(".");
+		fflush(stdout);
 	}
-	fflush(stdout);
-	for(size_t i = 0; i < _NUM_THREADS; i++)
+	int i = 0;
+	while(i < _NUM_THREADS)
 	{
 		pthread_join(para[i].thread_t, NULL);
+		printf("%d", i);
+		fflush(stdout);
 		if(result == NULL)
 		{
 			result = para[i].result;
@@ -253,8 +267,9 @@ AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &n
 			else
 				delete para[i].result;
 		}
+		++i;
 	}
-	printf("merged\n");
+	printf("\n");
 #endif
 	if(result == NULL)
 		return NULL;
@@ -284,7 +299,7 @@ AdaBoostFeature* RunAdaBoostRound(const array<Mat> &pos_iis, const array<Mat> &n
 	}
 
 	/** Remove best feature from feature list */
-	feature_list->erase(result->feature_it);
+	all_features->erase(result->feature_idx);
 
 	return result;
 }

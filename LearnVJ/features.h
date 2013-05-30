@@ -13,10 +13,10 @@ struct Feature;
 const int SUBWINDOW_SIZE = 24;
 
 // Generate all possible features
-list<Feature*>* GenerateAllFeatures(int step);
+array<Feature*>* GenerateAllFeatures(int step);
 // Function will not check that num_features is smaller than
 // the possible number of features, the function will loop.
-list<Feature*>* GenerateRandomFeatures(int num_features);
+array<Feature*>* GenerateRandomFeatures(int num_features);
 
 // Calculates a feature by the given IntegralImage
 int CalculateFeature(Feature* feature, const Mat& integral_image);

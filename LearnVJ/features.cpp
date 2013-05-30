@@ -33,12 +33,12 @@ static bool IsValidFeature(Feature* to_check)
 	return true;
 }
 
-list<Feature*>* GenerateAllFeatures(int step)
+array<Feature*>* GenerateAllFeatures(int step)
 {
 	int x, y, w, h, type;
 	int width, height;
 	Feature feature;
-	list<Feature*>* storage = new list<Feature*>();
+	array<Feature*>* storage = new array<Feature*>();
 	for(type = 0; type < FOUR_REC+1; type++) //type
 	{
 		for(w = 1; w < SUBWINDOW_SIZE; w += step) //width
@@ -86,9 +86,9 @@ list<Feature*>* GenerateAllFeatures(int step)
 	return storage;
 }
 
-list<Feature*>* GenerateRandomFeatures(int num_features)
+array<Feature*>* GenerateRandomFeatures(int num_features)
 {
-	list<Feature*>* storage = new list<Feature*>();
+	array<Feature*>* storage = new array<Feature*>();
 	srand(time(NULL));
 	for(int i=0; i<num_features; ++i)
 	{
