@@ -33,7 +33,7 @@ void build_cascade(unsigned int n_pos, unsigned int n_neg, const char *file)
 	char filename[128];
 	size_t feature_i = 0, stage_i = 0;
 	double detect_rate, false_pos_rate;
-	#define False_pos          0.13
+	#define False_pos          0.12
 	#define False_pos_update   (1 - False_pos)
 	double False_pos_rate = False_pos;
 	vector<AdaBoostFeature*> features;

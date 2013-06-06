@@ -7,7 +7,7 @@
 using namespace cv;
 using namespace std;
 
-//#define _NUM_THREADS 4
+#define _NUM_THREADS 3
 
 struct Feature;
 
