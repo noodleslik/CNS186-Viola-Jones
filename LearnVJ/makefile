@@ -2,7 +2,9 @@ CC = g++
 CPPFLAGS = `pkg-config --cflags opencv` -Wall -lpthread
 LIBS = `pkg-config --libs opencv` -lpthread
 
-all: adaboost_main conv build_cascade verify
+TARGETS = adaboost_main conv convi build_cascade verify
+
+all: $(TARGETS)
 
 adaboost_main.o: adaboost_main.cpp
 
@@ -19,6 +21,9 @@ adaboost_main: adaboost_main.o $(BOOST_OBJS)
 	@$(MAKE) -C $(@D) $(@F) -q || $(MAKE) -C $(@D) $(@F) 
 ##########
 conv: conv.cpp
+	$(CC) $< $(LIBS) $(CPPFLAGS) -o $@
+
+convi: convi.cpp
 	$(CC) $< $(LIBS) $(CPPFLAGS) -o $@
 
 build_cascade.o: build_cascade.cpp
@@ -42,8 +47,8 @@ verify_cascade: verify_cascade.o verify.o $(BOOST_OBJS)
 verify: verify_main verify_cascade
 
 clean:
-	rm -rf *.o adaboost_main conv build_cascade
-	rm -rf verify_main verify_cascade 
+	rm -rf *.o
+	rm -rf $(TARGETS)
 
 dist_clean: clean
 	rm -rf stage0*.txt
