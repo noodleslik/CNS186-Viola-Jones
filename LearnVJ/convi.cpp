@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 	ifstream fin;
 	fin.open(argv[1]);
 	ofstream fout;
-	fout.open("trees.txt");
+	fout.open("treesi.txt");
 	
 	unsigned int t, trees;
 	unsigned int type, x1, y1, x2, y2;// UL, LR points of rectangle1
@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
 		fin >> threshold >> polarity >> beta_t >> false_pos_rate;
 
 		double alpha = -log(beta_t);
-		ialpha = (unsigned int)(alpha * 10);
+		ialpha = (unsigned int)(alpha * 100);
 
-		if(alpha - ialpha/10.0 > 0.05)
+		if(alpha - ialpha/100.0 > 0.005)
 			++ialpha;
 
 		// write out

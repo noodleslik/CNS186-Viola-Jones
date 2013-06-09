@@ -6,6 +6,8 @@
 using namespace cv;
 using namespace std;
 
+//#define STORE_ALPHA
+
 bool is_object(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, int x, int y)
 {
 	double stage_sum = 0;
@@ -15,7 +17,11 @@ bool is_object(const vector<AdaBoostFeature*> &afeatures, const Mat &iimg, int x
 		double alpha;
 		Feature feature;
 		int feature_val, polarity, threshold;
+#ifndef STORE_ALPHA
 		alpha = -log(afeatures[fi]->beta_t);
+#else
+		alpha = afeatures[fi]->beta_t;
+#endif
 		polarity = afeatures[fi]->polarity;
 		threshold = afeatures[fi]->threshold;
 		feature.type = afeatures[fi]->feature->type;
