@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 	fin >> size >> trees;
 	// misc at begin of file
 	fout << size << endl << trees << endl;
-
+	double max_threshold = 0, max_ialpha = 0;
 	// process each weak classifier
 	t = 0;
 	while(!fin.eof() && t<trees)
@@ -33,12 +33,16 @@ int main(int argc, char *argv[])
 		// read in
 		fin >> type >> x1 >> y1 >> x2 >> y2;
 		fin >> threshold >> polarity >> beta_t >> false_pos_rate;
+		if(threshold > max_threshold)
+			max_threshold = threshold;
 
 		double alpha = -log(beta_t);
 		ialpha = (unsigned int)(alpha * 100);
 
 		if(alpha - ialpha/100.0 > 0.005)
 			++ialpha;
+		if(ialpha > max_ialpha)
+			max_ialpha = ialpha;
 
 		// write out
 		// Attention! store alpha value instead of beta_t for HW implementation
@@ -49,6 +53,8 @@ int main(int argc, char *argv[])
 		++t;
 	}
 
+	cout << "max threshold " << max_threshold << endl;
+	cout << "max ialpha " << max_ialpha << endl;
 	fin.close();
 	fout.close();
 	return 0;
