@@ -3,6 +3,8 @@
 #include "../IntegralImage/integral_image.h"
 #include <cstdio>
 
+// verify cascade stages
+
 extern
 void load_afeatures(vector<AdaBoostFeature*>& first_set, const char *file);
 extern

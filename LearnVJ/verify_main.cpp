@@ -6,11 +6,13 @@ void load_afeatures(vector<AdaBoostFeature*>& first_set, const char *file);
 extern
 void verify(const vector<AdaBoostFeature*> &features, const char *imfile);
 
+// verify a single stage
+
 int main(int argc, char *argv[])
 {
 	if(argc < 3)
 	{
-		printf("Usage: %s image cascade\n", argv[0]);
+		printf("Usage: %s image cascade_file\n", argv[0]);
 		return 1;
 	}
 	vector<AdaBoostFeature*> first_set;
