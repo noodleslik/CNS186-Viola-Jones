@@ -1,3 +1,11 @@
+Ported from godspeed1989@gmail.com
+Aims to learn and port AdaBoost algorithm to mlpack package.
+
+Welcome comments!:-)
+
+======================================================
+
+
 This is my repo for my CNS186 project. Don't steal the code for your CNS186 project or something.
 
 The dataset that will be used for this project is the Caltech 10k WebFaces dataset. The negative dataset is
